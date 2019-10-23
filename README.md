@@ -1,27 +1,6 @@
 # AsyncRender
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.2.
-
-## Development server
-
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
-
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+Are you sick of navigation blocking Angular resolver. No problem... just use the async-render component for the different parts of you app that need to be rendered 
+and create directive resolvers that you can attach to the inidvidual async render components. You can also provide you cool loader to be visualized while loading
+the data or you can use the exported `asyncRender` with a template variable to be able to check access the `isLoading` variable. You can also triggere refresh by using
+the `refresh$.next()` subject method. For more info check out the [app](https://stackblitz.com/github/IliaIdakiev/async-render). Happy coding!
