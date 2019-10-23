@@ -20,16 +20,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'async-render'`, () => {
+  it(`should have as title 'hg-async-render'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.debugElement.componentInstance;
-    expect(app.title).toEqual('async-render');
+    expect(app.title).toEqual('hg-async-render');
   });
 
   it('should render title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector('.content span').textContent).toContain('async-render app is running!');
+    expect(compiled.querySelector('.content span').textContent).toContain('hg-async-render app is running!');
   });
 });

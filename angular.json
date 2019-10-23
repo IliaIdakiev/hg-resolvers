@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "async-render-app": {
+    "hg-async-render-app": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/async-render-app",
+            "outputPath": "dist/hg-async-render-app",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -67,18 +67,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "async-render-app:build"
+            "browserTarget": "hg-async-render-app:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "async-render-app:build:production"
+              "browserTarget": "hg-async-render-app:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "async-render-app:build"
+            "browserTarget": "hg-async-render-app:build"
           }
         },
         "test": {
@@ -115,43 +115,43 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "async-render-app:serve"
+            "devServerTarget": "hg-async-render-app:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "async-render-app:serve:production"
+              "devServerTarget": "hg-async-render-app:serve:production"
             }
           }
         }
       }
     },
-    "async-render": {
+    "hg-async-render": {
       "projectType": "library",
-      "root": "projects/async-render",
-      "sourceRoot": "projects/async-render/src",
+      "root": "projects/hg-async-render",
+      "sourceRoot": "projects/hg-async-render/src",
       "prefix": "lib",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-ng-packagr:build",
           "options": {
-            "tsConfig": "projects/async-render/tsconfig.lib.json",
-            "project": "projects/async-render/ng-package.json"
+            "tsConfig": "projects/hg-async-render/tsconfig.lib.json",
+            "project": "projects/hg-async-render/ng-package.json"
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/async-render/src/test.ts",
-            "tsConfig": "projects/async-render/tsconfig.spec.json",
-            "karmaConfig": "projects/async-render/karma.conf.js"
+            "main": "projects/hg-async-render/src/test.ts",
+            "tsConfig": "projects/hg-async-render/tsconfig.spec.json",
+            "karmaConfig": "projects/hg-async-render/karma.conf.js"
           }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
           "options": {
             "tsConfig": [
-              "projects/async-render/tsconfig.lib.json",
-              "projects/async-render/tsconfig.spec.json"
+              "projects/hg-async-render/tsconfig.lib.json",
+              "projects/hg-async-render/tsconfig.spec.json"
             ],
             "exclude": [
               "**/node_modules/**"
@@ -161,5 +161,5 @@
       }
     }
   },
-  "defaultProject": "async-render-app"
+  "defaultProject": "hg-async-render-app"
 }

@@ -12,7 +12,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { reducers } from './+store/reducers';
 import { EffectsModule } from '@ngrx/effects';
 import { UserListEffects } from './+store/effects/list';
-import { AsyncRenderModule } from 'async-render';
+import { AsyncRenderModule } from 'hg-async-render';
 
 @NgModule({
   declarations: [

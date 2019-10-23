@@ -19,11 +19,11 @@
       "dom"
     ],
     "paths": {
-      "async-render": [
-        "dist/async-render"
+      "hg-async-render": [
+        "dist/hg-async-render"
       ],
-      "async-render/*": [
-        "dist/async-render/*"
+      "hg-async-render/*": [
+        "dist/hg-async-render/*"
       ]
     }
   },

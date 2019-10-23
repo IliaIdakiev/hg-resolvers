@@ -8,9 +8,9 @@ describe('AsyncRenderComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AsyncRenderComponent ]
+      declarations: [AsyncRenderComponent]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

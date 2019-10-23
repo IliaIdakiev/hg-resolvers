@@ -1,6 +1,6 @@
 import { Directive } from '@angular/core';
 import { UserListModel } from '../+store/models/list';
-import { AsyncRenderResolver, HG_ASYNC_RENDER } from 'async-render';
+import { AsyncRenderResolver, HG_ASYNC_RENDER } from 'hg-async-render';
 
 @Directive({
   selector: '[appUserListAsyncResolver]',
