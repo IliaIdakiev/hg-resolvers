@@ -14,6 +14,7 @@ export class AsyncRenderComponent implements OnDestroy {
   @Input() loaderTemplateRef: TemplateRef<any>;
 
   constructor(@Inject(HG_ASYNC_RENDER) @Optional() private resolvers: AsyncRenderResolver[] = []) {
+    this.resolvers = [].concat(this.resolvers);
     this.resolvers.forEach(res => res.resolve());
     this.refresh$.subscribe(() => { this.resolvers.forEach(res => res.resolve()); });
   }
