@@ -1,4 +1,4 @@
-# AsyncRender
+# Async Render
 
 Are you sick of navigation blocking Angular resolver. No problem... just use the async-render component for the different parts of you app that need to be rendered 
 and create directive resolvers that you can attach to the inidvidual async render components. You can also provide your cool loader to be visualized while loading
@@ -82,3 +82,5 @@ export class UserListAsyncResolverDirective extends AsyncRenderResolver {
 ```
 
 ### [4. DEMO](https://stackblitz.com/github/IliaIdakiev/async-render)
+
+[Check our website](https://hillgrand.com/);
