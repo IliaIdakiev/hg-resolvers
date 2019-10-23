@@ -82,4 +82,4 @@ export class UserListAsyncResolverDirective extends AsyncRenderResolver {
 </div>
 ```
 
-### [4. DEMO]((https://stackblitz.com/github/IliaIdakiev/async-render))
+### [4. DEMO](https://stackblitz.com/github/IliaIdakiev/async-render)
