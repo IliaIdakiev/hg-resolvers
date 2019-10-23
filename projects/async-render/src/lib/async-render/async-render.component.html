@@ -1,0 +1,4 @@
+<ng-container *ngIf="loaderTemplateRef">
+  <ng-container *ngTemplateOutlet="loaderTemplateRef; context: { $implicit: isLoading }"></ng-container>
+</ng-container>
+<ng-content></ng-content>

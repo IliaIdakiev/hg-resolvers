@@ -1,0 +1,29 @@
+<ng-template #loader let-isLoading>
+  <app-loader loaderSize="small" [visible]="isLoading" [localLoader]="true"></app-loader>
+</ng-template>
+<div>
+  <button (click)="hideUsers = !hideUsers">Toggle Users</button>
+  <ng-template [ngIf]="!hideUsers">
+    <div>UserListIsLoading: {{userListAsyncRender.isLoading}}</div>
+    <button (click)="userListAsyncRender.refresh$.next()">Reload Users</button>
+    <app-async-render [loaderTemplateRef]="loader" #userListAsyncRender="asyncRender" appUserListAsyncResolver>
+      <h1>User List</h1>
+      <ul>
+        <li *ngFor="let user of users$ | async"> {{ user.email }}</li>
+      </ul>
+    </app-async-render>
+  </ng-template>
+</div>
+
+<div>
+  <button (click)="hideUserPosts = !hideUserPosts">Toggle User Posts</button>
+  <ng-template [ngIf]="!hideUserPosts">
+    <div>UserPostsListIsLoading: {{userPostsListAsyncRender?.isLoading}}</div>
+    <app-async-render [loaderTemplateRef]="loader" #userPostsListAsyncRender="asyncRender" appUserPostListAsyncResolver>
+      <h1>User Posts List</h1>
+      <ul>
+        <li *ngFor="let post of posts$ | async"> {{ post.title }}</li>
+      </ul>
+    </app-async-render>
+  </ng-template>
+</div>
