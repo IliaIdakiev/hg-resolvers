@@ -1,6 +1,6 @@
 {
   "name": "hg-async-render",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "peerDependencies": {
     "@angular/common": "^8.2.11",
     "@angular/core": "^8.2.11"
