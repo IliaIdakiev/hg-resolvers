@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, Input } from '@angular/core';
 import { UserListModel } from '../+store/models/list';
 import { AsyncRenderResolver, HG_ASYNC_RENDER } from 'hg-async-render';
 
@@ -13,6 +13,11 @@ import { AsyncRenderResolver, HG_ASYNC_RENDER } from 'hg-async-render';
   ]
 })
 export class UserListAsyncResolverDirective extends AsyncRenderResolver {
+
+  // transfer the appUserListAsyncResolver input into shouldSkip that is used inside AsyncRenderResolver to skip the current resolver
+  // tslint:disable-next-line:no-input-rename
+  @Input('appUserListAsyncResolver') shouldSkip;
+
   constructor(userModel: UserListModel) {
     super(
       userModel.loadUsers,
@@ -21,4 +26,5 @@ export class UserListAsyncResolverDirective extends AsyncRenderResolver {
       userModel.userLoadFailure$
     );
   }
+
 }

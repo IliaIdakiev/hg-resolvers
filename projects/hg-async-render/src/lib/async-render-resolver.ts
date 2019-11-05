@@ -8,6 +8,7 @@ export class AsyncRenderResolver {
   isAlive: Subject<void> = new Subject();
   state = { loading: false, errored: false };
   resolveRequested = false;
+  shouldSkip = false;
 
   constructor(
     private loadAction: () => void,

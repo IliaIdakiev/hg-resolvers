@@ -1,6 +1,7 @@
 import { Component, Input, OnDestroy, Inject, TemplateRef, Optional } from '@angular/core';
 import { Subject } from 'rxjs';
 import { HG_ASYNC_RENDER, AsyncRenderResolver } from '../async-render-resolver';
+import { AsyncRenderBase } from '../async-render-base';
 
 @Component({
   selector: 'hg-async-render',
@@ -8,27 +9,19 @@ import { HG_ASYNC_RENDER, AsyncRenderResolver } from '../async-render-resolver';
   styleUrls: ['./async-render.component.scss'],
   exportAs: 'asyncRender'
 })
-export class AsyncRenderComponent implements OnDestroy {
+export class AsyncRenderComponent extends AsyncRenderBase implements OnDestroy {
 
   refresh$: Subject<void> = new Subject();
   @Input() loaderTemplateRef: TemplateRef<any>;
 
-  constructor(@Inject(HG_ASYNC_RENDER) @Optional() private resolvers: AsyncRenderResolver[] = []) {
-    this.resolvers = [].concat(this.resolvers || []);
-    this.resolvers.forEach(res => res.resolve());
-    this.refresh$.subscribe(() => { this.resolvers.forEach(res => res.resolve()); });
-  }
-
-  get isLoading() {
-    return this.resolvers.reduce((acc, res) => acc || res.state.loading, false);
-  }
-
-  get hasError() {
-    return this.resolvers.reduce((acc, res) => acc || res.state.errored, false);
+  constructor(@Inject(HG_ASYNC_RENDER) @Optional() resolvers: AsyncRenderResolver[] = []) {
+    super(resolvers);
+    this.resolve();
+    this.refresh$.subscribe(() => { this.resolve(); });
   }
 
   ngOnDestroy() {
     this.refresh$.complete();
-    this.resolvers.forEach(res => res.destroy());
+    this.destroy();
   }
 }
