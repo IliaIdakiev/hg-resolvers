@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { createEffect, Actions, ofType } from '@ngrx/effects';
+import { createEffect, Actions, ofType, act } from '@ngrx/effects';
 import {
   loadUsersSuccess,
   loadUsersFailure,
@@ -8,7 +8,11 @@ import {
   loadUsersCancel,
   loadUserPostsSuccess,
   loadUserPostsFailure,
-  loadUserPosts
+  loadUserPosts,
+  loadUserPost,
+  loadUserPostFailure,
+  loadUserPostSuccess,
+  loadUserPostCancel
 } from '../actions/list';
 import { UserService } from '../../user.service';
 import { switchMap, map, catchError, takeUntil } from 'rxjs/operators';
@@ -30,6 +34,16 @@ export class UserListEffects {
       takeUntil(this.actions$.pipe(ofType(loadUserPostsCancel))),
       map(posts => loadUserPostsSuccess(posts as any)),
       catchError(error => [loadUserPostsFailure(error)]))
+    )
+  ));
+
+  loadUserPost$ = createEffect(() => this.actions$.pipe(
+    ofType(loadUserPost),
+    map(action => action.payload),
+    switchMap(({ id }) => this.userService.loadPost(id).pipe(
+      takeUntil(this.actions$.pipe(ofType(loadUserPostCancel))),
+      map(post => loadUserPostSuccess(post as any)),
+      catchError(error => [loadUserPostFailure(error)]))
     )
   ));
 

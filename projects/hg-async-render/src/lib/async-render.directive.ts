@@ -12,7 +12,7 @@ export class AsyncRenderDirective extends AsyncRenderBase implements OnInit, OnD
   refresh$: Subject<void> = new Subject();
 
   constructor(
-    @Inject(HG_ASYNC_RENDER) @Optional() resolvers: AsyncRenderResolver[] = [],
+    @Inject(HG_ASYNC_RENDER) @Optional() resolvers: AsyncRenderResolver<any>[] = [],
     viewContainerRef: ViewContainerRef,
     templateRef: TemplateRef<any>,
   ) {

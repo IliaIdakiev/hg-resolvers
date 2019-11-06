@@ -9,5 +9,7 @@ import { UserListModel } from './+store/models/list';
 export class AppComponent {
   users$ = this.userListModel.users$;
   posts$ = this.userListModel.posts$;
+  post$ = this.userListModel.post$;
+  skip = true;
   constructor(private userListModel: UserListModel) { }
 }

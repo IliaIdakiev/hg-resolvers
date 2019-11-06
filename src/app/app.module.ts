@@ -13,13 +13,15 @@ import { reducers } from './+store/reducers';
 import { EffectsModule } from '@ngrx/effects';
 import { UserListEffects } from './+store/effects/list';
 import { AsyncRenderModule } from 'hg-async-render';
+import { UserPostDepResolverDirective } from './-resolvers/user-post-dep';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoaderComponent,
     UserListAsyncResolverDirective,
-    UserPostListResolverDirective
+    UserPostListResolverDirective,
+    UserPostDepResolverDirective
   ],
   imports: [
     BrowserModule,

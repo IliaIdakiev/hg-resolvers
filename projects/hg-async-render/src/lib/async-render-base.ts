@@ -2,7 +2,7 @@ import { AsyncRenderResolver } from '../lib/async-render-resolver';
 
 export class AsyncRenderBase {
 
-  constructor(private resolvers: AsyncRenderResolver[] = []) {
+  constructor(private resolvers: AsyncRenderResolver<any>[] = []) {
     this.resolvers = [].concat(this.resolvers || []);
   }
 

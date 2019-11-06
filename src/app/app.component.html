@@ -42,3 +42,18 @@
     </ng-template>
   </ng-template>
 </div>
+<br>
+Skip User Post Dep: {{skip}}
+<button (click)="skip = !skip">Toogle Skip</button>
+<div class="container">
+  <h1>Async Render Directive</h1>
+  <button (click)="hideDirective2 = !hideDirective2">Toggle User Post Dep (Directive)</button>
+  <ng-template [ngIf]="!hideDirective2">
+    <div>UserPostDepIsLoading (Directive): {{userPostDepAsyncRenderDirective.isLoading}}</div>
+    <button (click)="userPostDepAsyncRenderDirective.refresh$.next()">Reload User Post</button>
+    <ng-template hgAsyncRender #userPostDepAsyncRenderDirective="asyncRender" [appUserPostDepAsyncResolver]="skip">
+      <h1>Post</h1>
+      {{ post$ | async | json }}
+    </ng-template>
+  </ng-template>
+</div>

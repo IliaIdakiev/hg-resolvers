@@ -15,4 +15,8 @@ export class UserService {
   loadPosts() {
     return this.http.get('https://jsonplaceholder.typicode.com/posts');
   }
+
+  loadPost(id: number) {
+    return this.http.get('https://jsonplaceholder.typicode.com/posts/' + id);
+  }
 }

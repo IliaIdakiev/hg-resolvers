@@ -14,7 +14,7 @@ export class AsyncRenderComponent extends AsyncRenderBase implements OnInit, OnD
   refresh$: Subject<void> = new Subject();
   @Input() loaderTemplateRef: TemplateRef<any>;
 
-  constructor(@Inject(HG_ASYNC_RENDER) @Optional() resolvers: AsyncRenderResolver[] = []) {
+  constructor(@Inject(HG_ASYNC_RENDER) @Optional() resolvers: AsyncRenderResolver<any>[] = []) {
     super(resolvers);
     this.refresh$.subscribe(() => { this.resolve(); });
   }
