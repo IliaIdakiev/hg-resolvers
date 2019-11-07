@@ -34,7 +34,7 @@
   <ng-template [ngIf]="!hideDirective2">
     <div>UserListIsLoading (Directive): {{userListAsyncRenderDirective.isLoading}}</div>
     <button (click)="userListAsyncRenderDirective.refresh$.next()">Reload Users</button>
-    <ng-template hgAsyncRender #userListAsyncRenderDirective="asyncRender" [appUserListAsyncResolver]="true">
+    <ng-template hgAsyncRender #userListAsyncRenderDirective="asyncRender" [appUserListAsyncResolver]="false">
       <h1>User List</h1>
       <ul>
         <li *ngFor="let user of users$ | async"> {{ user.email }}</li>

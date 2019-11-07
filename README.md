@@ -84,4 +84,67 @@ export class UserListAsyncResolverDirective extends AsyncRenderResolver {
 
 ### [4. DEMO](https://stackblitz.com/github/IliaIdakiev/async-render)
 
+## More Congifirations
+
+### 1. Use the async render directive to skip the additional element added and use a custom loader
+```html
+<div>UserPostDepIsLoading (Directive): {{asyncRender.isLoading}}</div>
+<button (click)="asyncRender.refresh$.next()">Reload User Post</button>
+<ng-template hgAsyncRender #asyncRender="asyncRender" appUserPostDepAsyncResolver>
+  <h1>Post</h1>
+  {{ post$ | async | json }}
+</ng-template>
+```
+⚠️**Since the directive is rendering the template there is no loaderTemplateRef binding. But it's not actually needed since you can just put the loader itself info the template and use the template varialbe to access the state**
+
+### 2. You can also additionally configure the resolvers
+
+```typescript
+import { Directive } from '@angular/core';
+import { AsyncRenderResolver, HG_ASYNC_RENDER, ResolverConfig } from 'hg-async-render';
+
+@Directive({
+  selector: '[appUserListAsyncResolver]',
+  providers: [
+    {
+      provide: HG_ASYNC_RENDER, // use this injector token
+      useExisting: UserListAsyncResolverDirective, // use the name of your directive
+      multi: true // use milti providers
+    }
+  ]
+})
+export class UserListAsyncResolverDirective extends AsyncRenderResolver {
+  // tslint:disable-next-line:no-input-rename
+  @Input('appUserPostDepAsyncResolver') shouldSkip: boolean;
+  // set the attribute binding appUserPostDepAsyncResolver ([appUserPostDepAsyncResolver]="true") 
+  // to the local shouldSkip property (writing it this way is faster and with less code)
+  
+
+  config: ResolverConfig = ResolverConfig.AutoResolve; 
+  // ResolverConfig.Default - don't auto resolve when skip or a depenency changes/emits.
+
+  // ResolverConfig.AutoResolve - auto resolve when skip or a depenency changes/emits.
+
+  // ResolverConfig.AutoResolveOnce - auto resolve once when skip or a depenency changes/emits (look at the scenarios bellow).
+  // 
+  // ⚠️Scenarios for ResolverConfig.AutoResolveOnce:
+  // 1. if shouldSkip = true
+  //    the resolver will be skiped until the shouldSkip is set to false. When that happens a resolve will be triggered
+  // 2. if shouldSkip = false
+  //    the resolver will dispatch the resolve call and there won't be any auto resolves triggered 
+  //    (the only way to dispatch a resolve is via refresh$.next())
+
+  constructor(service: YourService) {
+    super(
+      ([dependecyStreamData1, dependecyStreamData2, dependecyStreamData3]) => service.loadSomething(dependecyStreamData1, dependecyStreamData2, dependecyStreamData3), // the method that dispatches the load action or sends the actual load request
+      service.cancelLoadUsers, // the method that dispatches the cancel load request or does the actual request cancellation
+      service.userLoadSuccess$, // a RxJS stream that emits when the data is loaded successfuly
+      service.userLoadFailure$, // a RxJS stream that emits when the data fails to load
+      [dependecyStream1$, dependecyStream2$, dependecyStream3$] // a RxJS observable or array of observables that we depend on (the stream values can be used inside the load function (the first argument of the super call))
+    );
+  }
+}
+
+```
+
 [Check our website](https://hillgrand.com/);

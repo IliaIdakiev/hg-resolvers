@@ -32,8 +32,7 @@ export class AsyncRenderResolver<T = any> {
         (shouldAutoResolveOnce && this._shouldSkip)
       ) && value === false
     ) {
-      if (shouldAutoResolveOnce) { this._autoResolveOnceCompleted = true; }
-      asapScheduler.schedule(() => { this.resolve(); });
+      asapScheduler.schedule(() => { this.resolve(true); });
     }
     if (value && this._dependencySubscription) {
       this._dependencySubscription.unsubscribe();
@@ -56,15 +55,19 @@ export class AsyncRenderResolver<T = any> {
 
   }
 
-  resolve() {
-    if (this.resolveRequested) { return; }
+  resolve(auto = false) {
+    if (this.resolveRequested || (auto && this._autoResolveOnceCompleted)) { return; }
     this.resolveRequested = true;
 
     if (this._dependencySubscription) { this._dependencySubscription.unsubscribe(); }
+    const isAutoResolveOnceConfig = this.config === ResolverConfig.AutoResolveOnce;
+    const isDefaultConfig = this.config === ResolverConfig.Default;
 
     const deps = !this.dependencies ? of(undefined, asapScheduler) : combineLatest(this.dependencies, asapScheduler).pipe(
-      this.config === ResolverConfig.AutoResolveOnce ? first() : takeUntil(this.isAlive$)
+      (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this.isAlive$)
     );
+
+    if (isAutoResolveOnceConfig) { this._autoResolveOnceCompleted = true; }
 
     this.state.errored = false;
     this.state.loading = true;

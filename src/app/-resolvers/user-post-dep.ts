@@ -15,7 +15,7 @@ import { delay, tap, map, take } from 'rxjs/operators';
   ]
 })
 export class UserPostDepResolverDirective extends AsyncRenderResolver {
-  config = ResolverConfig.AutoResolve;
+  config = ResolverConfig.AutoResolveOnce;
 
   // tslint:disable-next-line:no-input-rename
   @Input('appUserPostDepAsyncResolver') shouldSkip;

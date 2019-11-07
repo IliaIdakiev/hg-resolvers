@@ -7,7 +7,8 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "pack": "cp ./README.md ./projects/hg-async-render/README.md && cp ./LICENSE ./projects/hg-async-render/LICENSE && ng build hg-async-render"
   },
   "private": true,
   "dependencies": {

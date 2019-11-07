@@ -1,6 +1,11 @@
 {
   "name": "hg-async-render",
-  "version": "0.3.0",
+  "version": "0.3.3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IliaIdakiev/async-render"
+  },
+  "license": "MIT",
   "peerDependencies": {
     "@angular/common": "^8.2.11",
     "@angular/core": "^8.2.11"
