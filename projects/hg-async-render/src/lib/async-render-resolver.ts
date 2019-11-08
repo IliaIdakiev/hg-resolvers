@@ -63,27 +63,29 @@ export class AsyncRenderResolver<T = any> {
     const isAutoResolveOnceConfig = this.config === ResolverConfig.AutoResolveOnce;
     const isDefaultConfig = this.config === ResolverConfig.Default;
 
-    const deps = !this.dependencies ? of(undefined, asapScheduler) : combineLatest(this.dependencies, asapScheduler).pipe(
-      (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this.isAlive$)
-    );
-
     if (isAutoResolveOnceConfig) { this._autoResolveOnceCompleted = true; }
-
     this.state.errored = false;
     this.state.loading = true;
-    this.resolveRequested = false;
 
-    this._dependencySubscription = deps.subscribe(data => {
-      this.state.errored = false;
-      this.state.loading = true;
-      this.loadAction(data);
-      this.success$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
-        this.state.loading = false;
+    asapScheduler.schedule(() => {
+      this.resolveRequested = false;
+
+      const deps = !this.dependencies ? of(undefined) : combineLatest(this.dependencies).pipe(
+        (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this.isAlive$)
+      );
+
+      this._dependencySubscription = deps.subscribe(data => {
         this.state.errored = false;
-      });
-      this.failure$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
-        this.state.loading = false;
-        this.state.errored = true;
+        this.state.loading = true;
+        this.loadAction(data);
+        this.success$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
+          this.state.loading = false;
+          this.state.errored = false;
+        });
+        this.failure$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
+          this.state.loading = false;
+          this.state.errored = true;
+        });
       });
     });
   }
