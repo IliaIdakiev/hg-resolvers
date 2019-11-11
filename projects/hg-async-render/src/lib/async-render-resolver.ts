@@ -1,5 +1,5 @@
-import { first, takeUntil } from 'rxjs/operators';
-import { asapScheduler, Subject, Observable, combineLatest, of, Subscription } from 'rxjs';
+import { first, takeUntil, observeOn } from 'rxjs/operators';
+import { asapScheduler, Subject, Observable, combineLatest, of, Subscription, asyncScheduler } from 'rxjs';
 import { InjectionToken } from '@angular/core';
 
 export const HG_ASYNC_RENDER_RESOLVER = new InjectionToken<string>('HG_ASYNC_RENDER_RESOLVER');
@@ -70,7 +70,7 @@ export class AsyncRenderResolver<T = any> {
     asapScheduler.schedule(() => {
       this.resolveRequested = false;
 
-      const deps = !this.dependencies ? of(undefined, asapScheduler) : combineLatest(this.dependencies, asapScheduler).pipe(
+      const deps = !this.dependencies ? of(undefined) : combineLatest(this.dependencies).pipe(
         (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this.isAlive$)
       );
 
@@ -78,11 +78,11 @@ export class AsyncRenderResolver<T = any> {
         this.state.errored = false;
         this.state.loading = true;
         this.loadAction(data);
-        this.success$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
+        this.success$.pipe(first(), takeUntil(this.isAlive$), observeOn(asyncScheduler)).subscribe(() => {
           this.state.loading = false;
           this.state.errored = false;
         });
-        this.failure$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
+        this.failure$.pipe(first(), takeUntil(this.isAlive$), observeOn(asyncScheduler)).subscribe(() => {
           this.state.loading = false;
           this.state.errored = true;
         });
