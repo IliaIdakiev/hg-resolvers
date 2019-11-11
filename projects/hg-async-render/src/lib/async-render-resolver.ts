@@ -1,4 +1,4 @@
-import { first, takeUntil, observeOn } from 'rxjs/operators';
+import { first, takeUntil } from 'rxjs/operators';
 import { asapScheduler, Subject, Observable, combineLatest, of, Subscription, asyncScheduler } from 'rxjs';
 import { InjectionToken } from '@angular/core';
 
@@ -78,11 +78,11 @@ export class AsyncRenderResolver<T = any> {
         this.state.errored = false;
         this.state.loading = true;
         this.loadAction(data);
-        this.success$.pipe(first(), takeUntil(this.isAlive$), observeOn(asyncScheduler)).subscribe(() => {
+        this.success$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
           this.state.loading = false;
           this.state.errored = false;
         });
-        this.failure$.pipe(first(), takeUntil(this.isAlive$), observeOn(asyncScheduler)).subscribe(() => {
+        this.failure$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
           this.state.loading = false;
           this.state.errored = true;
         });
