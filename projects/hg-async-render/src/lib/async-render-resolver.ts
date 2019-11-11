@@ -70,7 +70,7 @@ export class AsyncRenderResolver<T = any> {
     asapScheduler.schedule(() => {
       this.resolveRequested = false;
 
-      const deps = !this.dependencies ? of(undefined) : combineLatest(this.dependencies).pipe(
+      const deps = !this.dependencies ? of(undefined, asapScheduler) : combineLatest(this.dependencies, asapScheduler).pipe(
         (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this.isAlive$)
       );
 
