@@ -1,6 +1,6 @@
 import { Directive, Input } from '@angular/core';
 import { UserListModel } from '../+store/models/list';
-import { HG_ASYNC_RENDER, AsyncRenderResolver, ResolverConfig } from 'hg-async-render';
+import { HG_ASYNC_RENDER_RESOLVER, AsyncRenderResolver, ResolverConfig } from 'hg-async-render';
 import { of, merge, interval } from 'rxjs';
 import { delay, tap, map, take } from 'rxjs/operators';
 
@@ -8,7 +8,7 @@ import { delay, tap, map, take } from 'rxjs/operators';
   selector: '[appUserPostDepAsyncResolver]',
   providers: [
     {
-      provide: HG_ASYNC_RENDER,
+      provide: HG_ASYNC_RENDER_RESOLVER,
       useExisting: UserPostDepResolverDirective,
       multi: true
     }

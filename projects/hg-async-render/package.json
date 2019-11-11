@@ -1,6 +1,6 @@
 {
   "name": "hg-async-render",
-  "version": "0.3.4",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/IliaIdakiev/async-render"

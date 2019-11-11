@@ -36,13 +36,13 @@ export class AppModule { }
 
 ```typescript
 import { Directive } from '@angular/core';
-import { AsyncRenderResolver, HG_ASYNC_RENDER } from 'hg-async-render';
+import { AsyncRenderResolver, HG_ASYNC_RENDER_RESOLVER } from 'hg-async-render';
 
 @Directive({
   selector: '[appUserListAsyncResolver]',
   providers: [
     {
-      provide: HG_ASYNC_RENDER, // use this injector token
+      provide: HG_ASYNC_RENDER_RESOLVER, // use this injector token
       useExisting: UserListAsyncResolverDirective, // use the name of your directive
       multi: true // use milti providers
     }
@@ -101,13 +101,13 @@ export class UserListAsyncResolverDirective extends AsyncRenderResolver {
 
 ```typescript
 import { Directive } from '@angular/core';
-import { AsyncRenderResolver, HG_ASYNC_RENDER, ResolverConfig } from 'hg-async-render';
+import { AsyncRenderResolver, HG_ASYNC_RENDER_RESOLVER, ResolverConfig } from 'hg-async-render';
 
 @Directive({
   selector: '[appUserListAsyncResolver]',
   providers: [
     {
-      provide: HG_ASYNC_RENDER, // use this injector token
+      provide: HG_ASYNC_RENDER_RESOLVER, // use this injector token
       useExisting: UserListAsyncResolverDirective, // use the name of your directive
       multi: true // use milti providers
     }
