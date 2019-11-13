@@ -22,10 +22,12 @@ export class UserPostDepResolverDirective extends AsyncRenderResolver {
 
   constructor(userListModel: UserListModel) {
     super(
-      ([id]) => userListModel.loadUserPost(id),
-      userListModel.cancelLoadUserPost,
-      userListModel.userPostLoadSuccess$,
-      userListModel.userPostLoadFailure$,
+      {
+        loadAction: ([id]) => userListModel.loadUserPost(id),
+        cancelAction: userListModel.cancelLoadUserPost,
+        success$: userListModel.userPostLoadSuccess$,
+        failure$: userListModel.userPostLoadFailure$,
+      },
       interval(10000).pipe(map(x => x + 1), take(5))
     );
   }

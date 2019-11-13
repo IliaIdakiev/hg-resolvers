@@ -19,12 +19,12 @@ export class UserListAsyncResolverDirective extends AsyncRenderResolver {
   @Input('appUserListAsyncResolver') shouldSkip;
 
   constructor(userModel: UserListModel) {
-    super(
-      userModel.loadUsers,
-      userModel.cancelLoadUsers,
-      userModel.userLoadSuccess$,
-      userModel.userLoadFailure$
-    );
+    super({
+      loadAction: userModel.loadUsers,
+      cancelAction: userModel.cancelLoadUsers,
+      success$: userModel.userLoadSuccess$,
+      failure$: userModel.userLoadFailure$
+    });
   }
 
 }

@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { LoaderComponent } from './loader/loader.component';
 import { UserListAsyncResolverDirective } from './-resolvers/user-list';
 import { UserPostListResolverDirective } from './-resolvers/user-post-list';
+import { SimpleUserListAsyncResolverDirective } from './-resolvers/simple-user-list';
 import { HttpClientModule } from '@angular/common/http';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
@@ -19,6 +20,7 @@ import { UserPostDepResolverDirective } from './-resolvers/user-post-dep';
   declarations: [
     AppComponent,
     LoaderComponent,
+    SimpleUserListAsyncResolverDirective,
     UserListAsyncResolverDirective,
     UserPostListResolverDirective,
     UserPostDepResolverDirective

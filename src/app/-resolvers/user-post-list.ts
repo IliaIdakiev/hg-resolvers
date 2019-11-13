@@ -15,11 +15,11 @@ import { HG_ASYNC_RENDER_RESOLVER, AsyncRenderResolver } from 'hg-async-render';
 export class UserPostListResolverDirective extends AsyncRenderResolver {
 
   constructor(userListModel: UserListModel) {
-    super(
-      userListModel.loadUserPosts,
-      userListModel.cancelLoadUserPosts,
-      userListModel.userPostsLoadSuccess$,
-      userListModel.userPostsLoadFailure$
-    );
+    super({
+      loadAction: userListModel.loadUserPosts,
+      cancelAction: userListModel.cancelLoadUserPosts,
+      success$: userListModel.userPostsLoadSuccess$,
+      failure$: userListModel.userPostsLoadFailure$
+    });
   }
 }

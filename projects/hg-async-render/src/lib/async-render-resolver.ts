@@ -1,5 +1,5 @@
 import { first, takeUntil } from 'rxjs/operators';
-import { asapScheduler, Subject, Observable, combineLatest, of, Subscription } from 'rxjs';
+import { asapScheduler, Subject, Observable, combineLatest, of, Subscription, ReplaySubject } from 'rxjs';
 import { InjectionToken } from '@angular/core';
 
 export const HG_ASYNC_RENDER_RESOLVER = new InjectionToken<string>('HG_ASYNC_RENDER_RESOLVER');
@@ -10,7 +10,19 @@ export enum ResolverConfig {
   AutoResolve
 }
 
-export class AsyncRenderResolver<T = any> {
+interface IActionsTarget<T> {
+  loadAction: (data: T) => void;
+  cancelAction: () => void;
+  success$: Observable<any>;
+  failure$: Observable<any>;
+}
+
+type FunctionObservableTarget<T, R> = (data: T) => Observable<R>;
+
+export class AsyncRenderResolver<T = any, R = any> {
+
+  config = ResolverConfig.Default;
+
   // tslint:disable-next-line:variable-name
   private _isAlive$: Subject<void> = new Subject();
 
@@ -29,11 +41,19 @@ export class AsyncRenderResolver<T = any> {
   // tslint:disable-next-line:variable-name
   private _state = { loading: false, errored: false };
 
+  // tslint:disable-next-line:variable-name
+  private _data$ = new ReplaySubject<R>(1);
+
   get isLoading() { return this._state.loading; }
 
   get hasErrored() { return this._state.errored; }
 
-  config = ResolverConfig.Default;
+  get data$() {
+    if (this.isFunctionObservableTarget) { return this._data$.asObservable(); }
+    // tslint:disable-next-line:max-line-length
+    console.warn('hg-async-render: Action based async render resolvers don\'t have data$ property! Data management should be controlled via action handlers!');
+    return undefined;
+  }
 
   set shouldSkip(value: boolean) {
     const shouldAutoResolveOnce = (this.config === ResolverConfig.AutoResolveOnce && this._autoResolveOnceCompleted === false);
@@ -56,15 +76,14 @@ export class AsyncRenderResolver<T = any> {
     return this._shouldSkip;
   }
 
-  constructor(
-    private loadAction: (data: T) => void,
-    private cancelAction: () => void,
-    private success$: Observable<any>,
-    private failure$: Observable<any>,
-    private dependencies: Observable<any> | Observable<any>[] = null
-  ) {
-
+  get isFunctionObservableTarget() {
+    return this.target instanceof Function;
   }
+
+  constructor(
+    private target: IActionsTarget<T> | FunctionObservableTarget<T, R>,
+    private dependencies: Observable<any> | Observable<any>[] = null
+  ) { }
 
   resolve(auto = false) {
     if (this._resolveRequested || (auto && this._autoResolveOnceCompleted)) { return; }
@@ -88,15 +107,37 @@ export class AsyncRenderResolver<T = any> {
       this._dependencySubscription = deps.subscribe(data => {
         this._state.errored = false;
         this._state.loading = true;
-        this.loadAction(data);
-        this.success$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
-          this._state.loading = false;
-          this._state.errored = false;
-        });
-        this.failure$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
-          this._state.loading = false;
-          this._state.errored = true;
-        });
+        if (!this.isFunctionObservableTarget) {
+          const target = this.target as IActionsTarget<T>;
+          target.loadAction(data);
+          target.success$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
+            this._state.loading = false;
+            this._state.errored = false;
+          });
+          target.failure$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
+            this._state.loading = false;
+            this._state.errored = true;
+          });
+        } else {
+          const targetFn = this.target as FunctionObservableTarget<T, R>;
+          targetFn(data).pipe(takeUntil(this._isAlive$)).subscribe({
+            next: res => {
+              this._data$.next(res);
+              this._state.loading = false;
+              this._state.errored = false;
+            },
+            error: err => {
+              this._data$.error(err);
+              this._state.loading = false;
+              this._state.errored = true;
+            },
+            complete: () => {
+              this._data$.complete();
+              this._state.loading = false;
+              this._state.errored = false;
+            }
+          });
+        }
       });
     });
   }
@@ -106,6 +147,9 @@ export class AsyncRenderResolver<T = any> {
     this._isAlive$.complete();
 
     if (!this._state.loading) { return; }
-    this.cancelAction();
+    const target = this.target as IActionsTarget<T>;
+    if (target.cancelAction) {
+      target.cancelAction();
+    }
   }
 }
