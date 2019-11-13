@@ -1,5 +1,5 @@
 import { first, takeUntil } from 'rxjs/operators';
-import { asapScheduler, Subject, Observable, combineLatest, of, Subscription, asyncScheduler } from 'rxjs';
+import { asapScheduler, Subject, Observable, combineLatest, of, Subscription } from 'rxjs';
 import { InjectionToken } from '@angular/core';
 
 export const HG_ASYNC_RENDER_RESOLVER = new InjectionToken<string>('HG_ASYNC_RENDER_RESOLVER');
