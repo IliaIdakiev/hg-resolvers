@@ -11,16 +11,27 @@ export enum ResolverConfig {
 }
 
 export class AsyncRenderResolver<T = any> {
-  private isAlive$: Subject<void> = new Subject();
+  // tslint:disable-next-line:variable-name
+  private _isAlive$: Subject<void> = new Subject();
+
   // tslint:disable-next-line:variable-name
   private _shouldSkip = null;
+
   // tslint:disable-next-line:variable-name
   private _autoResolveOnceCompleted = false;
+
   // tslint:disable-next-line:variable-name
   private _dependencySubscription: Subscription;
 
-  state = { loading: false, errored: false };
-  resolveRequested = false;
+  // tslint:disable-next-line:variable-name
+  private _resolveRequested = false;
+
+  // tslint:disable-next-line:variable-name
+  private _state = { loading: false, errored: false };
+
+  get isLoading() { return this._state.loading; }
+
+  get hasErrored() { return this._state.errored; }
 
   config = ResolverConfig.Default;
 
@@ -56,45 +67,45 @@ export class AsyncRenderResolver<T = any> {
   }
 
   resolve(auto = false) {
-    if (this.resolveRequested || (auto && this._autoResolveOnceCompleted)) { return; }
-    this.resolveRequested = true;
+    if (this._resolveRequested || (auto && this._autoResolveOnceCompleted)) { return; }
+    this._resolveRequested = true;
 
     if (this._dependencySubscription) { this._dependencySubscription.unsubscribe(); }
     const isAutoResolveOnceConfig = this.config === ResolverConfig.AutoResolveOnce;
     const isDefaultConfig = this.config === ResolverConfig.Default;
 
     if (isAutoResolveOnceConfig) { this._autoResolveOnceCompleted = true; }
-    this.state.errored = false;
-    this.state.loading = true;
+    this._state.errored = false;
+    this._state.loading = true;
 
     asapScheduler.schedule(() => {
-      this.resolveRequested = false;
+      this._resolveRequested = false;
 
       const deps = !this.dependencies ? of(undefined) : combineLatest(this.dependencies).pipe(
-        (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this.isAlive$)
+        (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this._isAlive$)
       );
 
       this._dependencySubscription = deps.subscribe(data => {
-        this.state.errored = false;
-        this.state.loading = true;
+        this._state.errored = false;
+        this._state.loading = true;
         this.loadAction(data);
-        this.success$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
-          this.state.loading = false;
-          this.state.errored = false;
+        this.success$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
+          this._state.loading = false;
+          this._state.errored = false;
         });
-        this.failure$.pipe(first(), takeUntil(this.isAlive$)).subscribe(() => {
-          this.state.loading = false;
-          this.state.errored = true;
+        this.failure$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
+          this._state.loading = false;
+          this._state.errored = true;
         });
       });
     });
   }
 
   destroy() {
-    this.isAlive$.next();
-    this.isAlive$.complete();
+    this._isAlive$.next();
+    this._isAlive$.complete();
 
-    if (!this.state.loading) { return; }
+    if (!this._state.loading) { return; }
     this.cancelAction();
   }
 }

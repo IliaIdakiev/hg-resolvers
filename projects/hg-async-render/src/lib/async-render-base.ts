@@ -7,11 +7,11 @@ export class AsyncRenderBase {
   }
 
   get isLoading() {
-    return this.resolvers.reduce((acc, res) => acc || res.state.loading, false);
+    return this.resolvers.reduce((acc, res) => acc || res.isLoading, false);
   }
 
   get hasError() {
-    return this.resolvers.reduce((acc, res) => acc || res.state.errored, false);
+    return this.resolvers.reduce((acc, res) => acc || res.hasErrored, false);
   }
 
   destroy() {
