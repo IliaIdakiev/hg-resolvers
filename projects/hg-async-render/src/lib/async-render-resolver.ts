@@ -44,6 +44,9 @@ export class AsyncRenderResolver<T = any, R = any> {
   // tslint:disable-next-line:variable-name
   private _data$ = new ReplaySubject<R>(1);
 
+  // tslint:disable-next-line:variable-name
+  private _functionObserverSubscription: Subscription;
+
   get isLoading() { return this._state.loading; }
 
   get hasErrored() { return this._state.errored; }
@@ -120,7 +123,11 @@ export class AsyncRenderResolver<T = any, R = any> {
           });
         } else {
           const targetFn = this.target as FunctionObservableTarget<T, R>;
-          targetFn(data).pipe(takeUntil(this._isAlive$)).subscribe({
+          if (this._functionObserverSubscription) {
+            this._functionObserverSubscription.unsubscribe();
+            this._functionObserverSubscription = undefined;
+          }
+          this._functionObserverSubscription = targetFn(data).pipe(takeUntil(this._isAlive$)).subscribe({
             next: res => {
               this._data$.next(res);
               this._state.loading = false;
@@ -135,6 +142,7 @@ export class AsyncRenderResolver<T = any, R = any> {
               this._data$.complete();
               this._state.loading = false;
               this._state.errored = false;
+              this._functionObserverSubscription = undefined;
             }
           });
         }
