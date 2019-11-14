@@ -1,4 +1,4 @@
-# Async Render 
+# Angular Async Render (_Async Resolvers_)
 __(something similar to react suspense for data fetching)__
 
 Are you sick of the navigation blocking Angular resolver. No problem... just use the async-render component for the different parts of you app that need to be rendered 
@@ -61,7 +61,7 @@ export class UserListAsyncResolverDirective extends AsyncRenderResolver {
 
 ```
 
-### 3. Use the async render component and the resolver from step.2 
+### 3. Use the async render component and the resolver from step.2 (you can also use [hgAsyncRender] directive - [look here](https://github.com/IliaIdakiev/async-render#1-use-the-async-render-directive-to-skip-the-additional-element-added-and-use-a-custom-loader))
 ```html
 <!-- If you want you can create a loader template that will be used while loading -->
 <ng-template #loader let-isLoading>
@@ -80,6 +80,14 @@ export class UserListAsyncResolverDirective extends AsyncRenderResolver {
     </ul>
   </hg-async-render>
 </div>
+```
+
+Async Render Component Inputs:
+```typescript
+@Input() loaderTemplateRef: TemplateRef<any>; // the template that will be used for the loader
+@Input() errorTemplateRef: TemplateRef<any>; // the template that will be used for the error
+@Input() autoHideLoader = false; // auto hide the loader template on loading
+@Input() autoShowError = false; // auth show the error template on error
 ```
 
 ### [4. DEMO](https://stackblitz.com/github/IliaIdakiev/async-render)
@@ -149,7 +157,6 @@ export class UserListAsyncResolverDirective extends AsyncRenderResolver {
 
 ```
 
-
 ### 3. Regular Resolver
 
 ```typescript
@@ -196,5 +203,9 @@ export class SimpleUserListAsyncResolverDirective extends AsyncRenderResolver {
   </ul>
 </ng-template>
 ```
+
+### 4. Error Handling
+
+Each resolver has an error property that will contain the error if one exists. You can use this property inside your templates via template reference variable containing the resolver instance (just like the one with name `resolver` from the code above section 4) to present the error message/code to the user.
 
 [Check our website](https://hillgrand.com/);

@@ -1,4 +1,7 @@
-<ng-container *ngIf="loaderTemplateRef">
+<ng-container *ngIf="loaderTemplateRef && (!autoHideLoader || isLoading)">
   <ng-container *ngTemplateOutlet="loaderTemplateRef; context: { $implicit: isLoading }"></ng-container>
+</ng-container>
+<ng-container *ngIf="errorTemplateRef && (!autoShowError || hasError)">
+  <ng-container *ngTemplateOutlet="errorTemplateRef; context: { $implicit: hasError }"></ng-container>
 </ng-container>
 <ng-content></ng-content>

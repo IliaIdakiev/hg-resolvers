@@ -45,14 +45,19 @@ export class AsyncRenderResolver<T = any, R = any> {
   private _data$ = new ReplaySubject<R>(1);
 
   // tslint:disable-next-line:variable-name
+  private _dataObservable$ = this._data$.asObservable();
+
+  // tslint:disable-next-line:variable-name
   private _functionObserverSubscription: Subscription;
 
   get isLoading() { return this._state.loading; }
 
   get hasErrored() { return this._state.errored; }
 
+  error: Error;
+
   get data$() {
-    if (this.isFunctionObservableTarget) { return this._data$.asObservable(); }
+    if (this.isFunctionObservableTarget) { return this._dataObservable$; }
     // tslint:disable-next-line:max-line-length
     console.warn('hg-async-render: Action based async render resolvers don\'t have data$ property! Data management should be controlled via action handlers!');
     return undefined;
@@ -99,6 +104,7 @@ export class AsyncRenderResolver<T = any, R = any> {
     if (isAutoResolveOnceConfig) { this._autoResolveOnceCompleted = true; }
     this._state.errored = false;
     this._state.loading = true;
+    this.error = undefined;
 
     asapScheduler.schedule(() => {
       this._resolveRequested = false;
@@ -135,6 +141,7 @@ export class AsyncRenderResolver<T = any, R = any> {
             },
             error: err => {
               this._data$.error(err);
+              this.error = err;
               this._state.loading = false;
               this._state.errored = true;
             },
