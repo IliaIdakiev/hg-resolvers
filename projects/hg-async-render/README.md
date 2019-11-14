@@ -187,7 +187,7 @@ export class SimpleUserListAsyncResolverDirective extends AsyncRenderResolver {
   @Input('appSimpleUserListAsyncResolver') shouldSkip;
 
   constructor(http: HttpClient) {
-    // the function that we orovide to super would usually be a user serice load method
+    // the function that we provide to super would usually be a user serice load method
     super(() => http.get('https://jsonplaceholder.typicode.com/users')); 
   }
 }
