@@ -1,5 +1,4 @@
 # Angular Async Render (_Async Resolvers_)
-__(something similar to react suspense for data fetching)__
 
 Are you sick of the navigation blocking Angular resolver. No problem... just use the async-render component for the different parts of you app that need to be rendered 
 and create directive resolvers that you can attach to the inidvidual async render components. You can also provide your cool loader to be visualized while loading
