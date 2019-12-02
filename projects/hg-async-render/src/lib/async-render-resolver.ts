@@ -48,7 +48,7 @@ export class AsyncRenderResolver<T = any, R = any> {
   private _dataObservable$ = this._data$.asObservable();
 
   // tslint:disable-next-line:variable-name
-  private _functionObserverSubscription: Subscription;
+  private _functionObservableSubscription: Subscription;
 
   get isLoading() { return this._state.loading; }
 
@@ -64,6 +64,19 @@ export class AsyncRenderResolver<T = any, R = any> {
   }
 
   set shouldSkip(value: boolean) {
+    if (value === true && !this._shouldSkip) {
+      if (!!this._functionObservableSubscription) {
+        this._functionObservableSubscription.unsubscribe();
+        this._functionObservableSubscription = undefined;
+      } else if (!!this._dependencySubscription) {
+        this._dependencySubscription.unsubscribe();
+        this._dependencySubscription = undefined;
+      }
+      this._resolveRequested = false;
+      this._state.errored = false;
+      this._state.loading = false;
+    }
+
     const shouldAutoResolveOnce = (this.config === ResolverConfig.AutoResolveOnce && this._autoResolveOnceCompleted === false);
     if (
       (
@@ -73,10 +86,10 @@ export class AsyncRenderResolver<T = any, R = any> {
     ) {
       asapScheduler.schedule(() => { this.resolve(true); });
     }
-    if (value && this._dependencySubscription) {
-      this._dependencySubscription.unsubscribe();
-      this._dependencySubscription = null;
-    }
+    // if (value && this._dependencySubscription) {
+    //   this._dependencySubscription.unsubscribe();
+    //   this._dependencySubscription = null;
+    // }
     this._shouldSkip = value;
   }
 
@@ -107,13 +120,13 @@ export class AsyncRenderResolver<T = any, R = any> {
     this.error = undefined;
 
     asapScheduler.schedule(() => {
-      this._resolveRequested = false;
 
       const deps = !this.dependencies ? of(undefined) : combineLatest(this.dependencies).pipe(
         (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this._isAlive$)
       );
 
       this._dependencySubscription = deps.subscribe(data => {
+        this._resolveRequested = false;
         this._state.errored = false;
         this._state.loading = true;
         if (!this.isFunctionObservableTarget) {
@@ -129,11 +142,11 @@ export class AsyncRenderResolver<T = any, R = any> {
           });
         } else {
           const targetFn = this.target as FunctionObservableTarget<T, R>;
-          if (this._functionObserverSubscription) {
-            this._functionObserverSubscription.unsubscribe();
-            this._functionObserverSubscription = undefined;
+          if (this._functionObservableSubscription) {
+            this._functionObservableSubscription.unsubscribe();
+            this._functionObservableSubscription = undefined;
           }
-          this._functionObserverSubscription = targetFn(data).pipe(takeUntil(this._isAlive$)).subscribe({
+          this._functionObservableSubscription = targetFn(data).pipe(takeUntil(this._isAlive$)).subscribe({
             next: res => {
               this._data$.next(res);
               this._state.loading = false;
@@ -149,7 +162,7 @@ export class AsyncRenderResolver<T = any, R = any> {
               this._data$.complete();
               this._state.loading = false;
               this._state.errored = false;
-              this._functionObserverSubscription = undefined;
+              this._functionObservableSubscription = undefined;
             }
           });
         }
