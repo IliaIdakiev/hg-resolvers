@@ -84,12 +84,9 @@ export class AsyncRenderResolver<T = any, R = any> {
         (shouldAutoResolveOnce && this._shouldSkip)
       ) && value === false
     ) {
-      asapScheduler.schedule(() => { this.resolve(true); });
+      // asapScheduler.schedule(() => { this.resolve(true); });
+      this.resolve(true);
     }
-    // if (value && this._dependencySubscription) {
-    //   this._dependencySubscription.unsubscribe();
-    //   this._dependencySubscription = null;
-    // }
     this._shouldSkip = value;
   }
 
@@ -103,7 +100,7 @@ export class AsyncRenderResolver<T = any, R = any> {
 
   constructor(
     private target: IActionsTarget<T> | FunctionObservableTarget<T, R>,
-    private dependencies: Observable<any> | Observable<any>[] = null
+    private dependencies: () => (Observable<any> | any[]) | Observable<any> | Observable<any>[] = null
   ) { }
 
   resolve(auto = false) {
@@ -120,8 +117,12 @@ export class AsyncRenderResolver<T = any, R = any> {
     this.error = undefined;
 
     asapScheduler.schedule(() => {
-
-      const deps = !this.dependencies ? of(undefined) : combineLatest(this.dependencies).pipe(
+      let dependencies: any = this.dependencies;
+      if (typeof this.dependencies === 'function') {
+        dependencies = this.dependencies();
+        if (Array.isArray(dependencies)) { dependencies = [dependencies]; }
+      }
+      const deps = !dependencies ? of(undefined) : combineLatest(dependencies).pipe(
         (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this._isAlive$)
       );
 
@@ -159,7 +160,6 @@ export class AsyncRenderResolver<T = any, R = any> {
               this._state.errored = true;
             },
             complete: () => {
-              this._data$.complete();
               this._state.loading = false;
               this._state.errored = false;
               this._functionObservableSubscription = undefined;
