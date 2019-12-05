@@ -6,9 +6,5 @@ import { Component, Input } from '@angular/core';
   styleUrls: ['./loader.component.scss']
 })
 export class LoaderComponent {
-
   @Input() visible: boolean;
-  @Input() localLoader: boolean;
-  @Input() loaderSize = 10;
-
 }

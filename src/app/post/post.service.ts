@@ -4,13 +4,9 @@ import { HttpClient } from '@angular/common/http';
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
+export class PostService {
 
   constructor(private http: HttpClient) { }
-
-  loadUsers() {
-    return this.http.get('https://jsonplaceholder.typicode.com/users');
-  }
 
   loadPosts() {
     return this.http.get('https://jsonplaceholder.typicode.com/posts');

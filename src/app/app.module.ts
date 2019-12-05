@@ -3,36 +3,32 @@ import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { LoaderComponent } from './loader/loader.component';
-import { UserListAsyncResolverDirective } from './-resolvers/user-list';
-import { UserPostListResolverDirective } from './-resolvers/user-post-list';
-import { SimpleUserListAsyncResolverDirective } from './-resolvers/simple-user-list';
+// import { UserListAsyncResolverDirective } from './-resolvers/user-list';
+// import { UserPostListResolverDirective } from './-resolvers/user-post-list';
+// import { SimpleUserListAsyncResolverDirective } from './-resolvers/simple-user-list';
 import { HttpClientModule } from '@angular/common/http';
-import { StoreModule } from '@ngrx/store';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-import { reducers } from './+store/reducers';
-import { EffectsModule } from '@ngrx/effects';
-import { UserListEffects } from './+store/effects/list';
-import { AsyncRenderModule } from 'hg-async-render';
-import { UserPostDepResolverDirective } from './-resolvers/user-post-dep';
+// import { UserPostDepResolverDirective } from './-resolvers/user-post-dep';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HomeComponent } from './home/home.component';
+import { CoreModule } from './core/core.module';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
     AppComponent,
-    LoaderComponent,
-    SimpleUserListAsyncResolverDirective,
-    UserListAsyncResolverDirective,
-    UserPostListResolverDirective,
-    UserPostDepResolverDirective
+    // SimpleUserListAsyncResolverDirective,
+    // UserListAsyncResolverDirective,
+    // UserPostListResolverDirective,
+    // UserPostDepResolverDirective,
+    HomeComponent
   ],
   imports: [
+    CoreModule,
+    SharedModule,
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    AsyncRenderModule,
-    StoreModule.forRoot(reducers),
-    EffectsModule.forRoot([UserListEffects]),
-    StoreDevtoolsModule.instrument(),
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
