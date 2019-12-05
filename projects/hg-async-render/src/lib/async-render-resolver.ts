@@ -17,11 +17,11 @@ interface IActionsTarget<T> {
   failure$: Observable<any>;
 }
 
-type FunctionObservableTarget<T, R> = (data: T) => Observable<R>;
+type FunctionObservableTarget<T = any, R = T> = (data: T) => Observable<R>;
 
-export class AsyncRenderResolver<T = any, R = any> {
+export class AsyncRenderResolver<T = any, R = T> {
 
-  config = ResolverConfig.Default;
+  protected config = ResolverConfig.Default;
 
   // tslint:disable-next-line:variable-name
   private _isAlive$: Subject<void> = new Subject();
@@ -56,7 +56,7 @@ export class AsyncRenderResolver<T = any, R = any> {
 
   error: Error;
 
-  get data$() {
+  public get data$() {
     if (this.isFunctionObservableTarget) { return this._dataObservable$; }
     // tslint:disable-next-line:max-line-length
     console.warn('hg-async-render: Action based async render resolvers don\'t have data$ property! Data management should be controlled via action handlers!');
@@ -94,7 +94,7 @@ export class AsyncRenderResolver<T = any, R = any> {
     return this._shouldSkip;
   }
 
-  get isFunctionObservableTarget() {
+  private get isFunctionObservableTarget() {
     return this.target instanceof Function;
   }
 
@@ -112,11 +112,12 @@ export class AsyncRenderResolver<T = any, R = any> {
     const isDefaultConfig = this.config === ResolverConfig.Default;
 
     if (isAutoResolveOnceConfig) { this._autoResolveOnceCompleted = true; }
-    this._state.errored = false;
-    this._state.loading = true;
-    this.error = undefined;
 
     asapScheduler.schedule(() => {
+      this._state.errored = false;
+      this._state.loading = true;
+      this.error = undefined;
+
       let dependencies: any = this.dependencies;
       if (typeof this.dependencies === 'function') {
         dependencies = this.dependencies();
@@ -128,8 +129,12 @@ export class AsyncRenderResolver<T = any, R = any> {
 
       this._dependencySubscription = deps.subscribe(data => {
         this._resolveRequested = false;
-        this._state.errored = false;
-        this._state.loading = true;
+
+        asapScheduler.schedule(() => {
+          this._state.errored = false;
+          this._state.loading = true;
+        });
+
         if (!this.isFunctionObservableTarget) {
           const target = this.target as IActionsTarget<T>;
           target.loadAction(data);
