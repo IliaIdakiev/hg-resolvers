@@ -2,6 +2,7 @@ import { Directive, Input } from '@angular/core';
 import { HG_ASYNC_RENDER_RESOLVER, AsyncRenderResolver, ResolverConfig, toObservable } from 'hg-async-render';
 import { UserService } from '../user.service';
 import { Observable } from 'rxjs';
+import { IPost } from 'src/app/shared/interfaces';
 
 
 @Directive({
@@ -13,7 +14,7 @@ import { Observable } from 'rxjs';
   }],
   exportAs: 'userPostsResolver'
 })
-export class UserPostsResolverDirective extends AsyncRenderResolver {
+export class UserPostsResolverDirective extends AsyncRenderResolver<IPost[]> {
 
   @Input('appUserPostsResolver') shouldSkip;
 

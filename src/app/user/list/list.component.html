@@ -1,7 +1,7 @@
 <i>Single async-render (directive) with multiple resolvers. We also have a loader component that is used when fetching
   any of the data that needs to be resolved within the async-render. In this example we are loading all the posts for
   the selected user from the table. We also have mutiple buttons using the ViewChild selectors to imperativelly trigger
-  a reload</i>
+  a reload. We are also skipping the user posts resolver when there is no user selected.</i>
 <br />
 <button (click)="reloadAll()">Reload All</button>
 <app-loader [visible]="asyncRender.isLoading">
@@ -9,7 +9,7 @@
     [appUserPostsResolver]="!selectedElementId" #userPostsResolver="userPostsResolver" [selectedId]="selectedElementId">
     <h1>Users</h1>
     <button (click)="reloadUserList()">Reload User List</button>
-    <div id="list-holder">
+    <div class="list-holder">
       <table mat-table [dataSource]="userListResolver.data$ | async" class="mat-elevation-z8">
         <ng-container matColumnDef="email">
           <th mat-header-cell *matHeaderCellDef> Email </th>
@@ -29,7 +29,7 @@
     <ng-container *ngIf="selectedElementId && (userPostsResolver.data$ | async)">
       <h1>User Posts</h1>
       <button (click)="reloadUserPosts()">Reload User Posts</button>
-      <div id="posts-holder">
+      <div class="list-holder">
         <table mat-table [dataSource]="(userPostsResolver.data$ | async)" class="mat-elevation-z8">
           <ng-container matColumnDef="title">
             <th mat-header-cell *matHeaderCellDef> Title </th>
