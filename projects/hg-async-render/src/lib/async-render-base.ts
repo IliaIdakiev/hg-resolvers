@@ -2,7 +2,7 @@ import { AsyncRenderResolver } from '../lib/async-render-resolver';
 
 export class AsyncRenderBase {
 
-  constructor(private resolvers: AsyncRenderResolver<any>[] = []) {
+  constructor(protected resolvers: AsyncRenderResolver<any>[] = []) {
     this.resolvers = [].concat(this.resolvers || []);
   }
 
@@ -14,11 +14,11 @@ export class AsyncRenderBase {
     return this.resolvers.reduce((acc, res) => acc || res.hasErrored, false);
   }
 
-  destroy() {
+  protected destroy() {
     this.resolvers.forEach(res => res.destroy());
   }
 
-  resolve() {
+  public resolve() {
     this.resolvers.forEach(res => {
       if (res.shouldSkip) { return; }
       res.resolve();

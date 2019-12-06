@@ -12,14 +12,19 @@ import { AsyncRenderBase } from '../async-render-base';
 export class AsyncRenderComponent extends AsyncRenderBase implements OnInit, OnDestroy {
 
   refresh$: Subject<void> = new Subject();
+
   @Input() loaderTemplateRef: TemplateRef<any>;
   @Input() errorTemplateRef: TemplateRef<any>;
-  @Input() autoHideLoader = false;
-  @Input() autoShowError = false;
+  @Input() autoControlLoader = false;
+  @Input() autoControlError = false;
 
   constructor(@Inject(HG_ASYNC_RENDER_RESOLVER) @Optional() resolvers: AsyncRenderResolver<any>[] = []) {
     super(resolvers);
     this.refresh$.subscribe(() => { this.resolve(); });
+  }
+
+  public get errors() {
+    return this.resolvers.map(r => r.error);
   }
 
   ngOnInit() {

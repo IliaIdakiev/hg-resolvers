@@ -10,16 +10,16 @@ export enum ResolverConfig {
   AutoResolve
 }
 
-interface IActionsTarget<T> {
-  loadAction: (data: T) => void;
+interface IActionsTarget<D> {
+  loadAction: (deps: D) => void;
   cancelAction: () => void;
   success$: Observable<any>;
   failure$: Observable<any>;
 }
 
-type FunctionObservableTarget<T = any, R = T> = (data: T) => Observable<R>;
+type FunctionObservableTarget<T, D> = (deps: D) => Observable<T>;
 
-export class AsyncRenderResolver<T = any, R = T> {
+export class AsyncRenderResolver<T, D = any> {
 
   protected config = ResolverConfig.Default;
 
@@ -42,7 +42,7 @@ export class AsyncRenderResolver<T = any, R = T> {
   private _state = { loading: false, errored: false };
 
   // tslint:disable-next-line:variable-name
-  private _data$ = new ReplaySubject<R>(1);
+  private _data$ = new ReplaySubject<T>(1);
 
   // tslint:disable-next-line:variable-name
   private _dataObservable$ = this._data$.asObservable();
@@ -95,11 +95,11 @@ export class AsyncRenderResolver<T = any, R = T> {
   }
 
   private get isFunctionObservableTarget() {
-    return this.target instanceof Function;
+    return this.targetFn instanceof Function;
   }
 
   constructor(
-    private target: IActionsTarget<T> | FunctionObservableTarget<T, R>,
+    private targetFn: IActionsTarget<T> | FunctionObservableTarget<T, D>,
     private dependencies: () => (Observable<any> | any[]) | Observable<any> | Observable<any>[] = null
   ) { }
 
@@ -136,7 +136,7 @@ export class AsyncRenderResolver<T = any, R = T> {
         });
 
         if (!this.isFunctionObservableTarget) {
-          const target = this.target as IActionsTarget<T>;
+          const target = this.targetFn as IActionsTarget<T>;
           target.loadAction(data);
           target.success$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
             this._state.loading = false;
@@ -147,7 +147,7 @@ export class AsyncRenderResolver<T = any, R = T> {
             this._state.errored = true;
           });
         } else {
-          const targetFn = this.target as FunctionObservableTarget<T, R>;
+          const targetFn = this.targetFn as FunctionObservableTarget<T, D>;
           if (this._functionObservableSubscription) {
             this._functionObservableSubscription.unsubscribe();
             this._functionObservableSubscription = undefined;
@@ -159,7 +159,6 @@ export class AsyncRenderResolver<T = any, R = T> {
               this._state.errored = false;
             },
             error: err => {
-              this._data$.error(err);
               this.error = err;
               this._state.loading = false;
               this._state.errored = true;
@@ -180,7 +179,7 @@ export class AsyncRenderResolver<T = any, R = T> {
     this._isAlive$.complete();
 
     if (!this._state.loading) { return; }
-    const target = this.target as IActionsTarget<T>;
+    const target = this.targetFn as IActionsTarget<T>;
     if (target.cancelAction) {
       target.cancelAction();
     }
