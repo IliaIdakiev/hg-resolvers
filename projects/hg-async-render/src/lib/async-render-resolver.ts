@@ -1,4 +1,4 @@
-import { first, takeUntil } from 'rxjs/operators';
+import { first, takeUntil, filter } from 'rxjs/operators';
 import { asapScheduler, Subject, Observable, combineLatest, of, Subscription, ReplaySubject } from 'rxjs';
 import { InjectionToken } from '@angular/core';
 
@@ -21,6 +21,11 @@ type FunctionObservableTarget<T, D> = (deps: D) => Observable<T>;
 
 export class AsyncRenderResolver<T, D = any> {
 
+  private static resolverIdRecord: {
+    [
+    id: string]: { ctor: any, requested: boolean, delegate: Subject<{ type: 'success' | 'failure', data: any | Error }> }
+  } = {};
+
   protected config = ResolverConfig.Default;
 
   // tslint:disable-next-line:variable-name
@@ -30,22 +35,32 @@ export class AsyncRenderResolver<T, D = any> {
   private _shouldSkip = null;
 
   // tslint:disable-next-line:variable-name
+  private _uniqueId = null;
+
+  // tslint:disable-next-line:variable-name
   private _autoResolveOnceCompleted = false;
 
   // tslint:disable-next-line:variable-name
   private _dependencySubscription: Subscription;
 
   // tslint:disable-next-line:variable-name
-  private _resolveRequested = false;
-
-  // tslint:disable-next-line:variable-name
   private _state = { loading: false, errored: false };
 
   // tslint:disable-next-line:variable-name
   private _data$ = new ReplaySubject<T>(1);
+  // tslint:disable-next-line:variable-name
+  private _data: T;
+
+  // tslint:disable-next-line:variable-name
+  private _error$ = new ReplaySubject<T>(1);
+  // tslint:disable-next-line:variable-name
+  private _error: Error = null;
 
   // tslint:disable-next-line:variable-name
   private _dataObservable$ = this._data$.asObservable();
+
+  // tslint:disable-next-line:variable-name
+  private _errorObservable$ = this._error$.asObservable();
 
   // tslint:disable-next-line:variable-name
   private _functionObservableSubscription: Subscription;
@@ -54,13 +69,53 @@ export class AsyncRenderResolver<T, D = any> {
 
   get hasErrored() { return this._state.errored; }
 
-  error: Error;
+  get error(): Error {
+    if (this.isFunctionObservableTarget) { return this._error; }
+    // tslint:disable-next-line:max-line-length
+    console.warn('hg-async-render: Action based async render resolvers don\'t have error property! Data management should be outsourced!');
+    return undefined;
+  }
+
+  get data(): T {
+    if (this.isFunctionObservableTarget) { return this._data; }
+    // tslint:disable-next-line:max-line-length
+    console.warn('hg-async-render: Action based async render resolvers don\'t have data property! Data management should be outsourced!');
+    return undefined;
+  }
 
   public get data$() {
     if (this.isFunctionObservableTarget) { return this._dataObservable$; }
     // tslint:disable-next-line:max-line-length
-    console.warn('hg-async-render: Action based async render resolvers don\'t have data$ property! Data management should be controlled via action handlers!');
+    console.warn('hg-async-render: Action based async render resolvers don\'t have data$ property! Data management should be outsourced!');
     return undefined;
+  }
+
+  public get error$() {
+    if (this.isFunctionObservableTarget) { return this._errorObservable$; }
+    // tslint:disable-next-line:max-line-length
+    console.warn('hg-async-render: Action based async render resolvers don\'t have error$ property! Data management should be outsourced!');
+    return undefined;
+  }
+
+  protected set uid(value: any) {
+    if (!this.constructor) {
+      // tslint:disable-next-line:max-line-length
+      console.warn('hg-async-render: Missing constructor property! Unique id loads are not possible without the constructor property!');
+      return;
+    }
+    this._uniqueId = value;
+    const existingRecord = AsyncRenderResolver.resolverIdRecord[value];
+    if (existingRecord && existingRecord.ctor !== this.constructor) {
+      // tslint:disable-next-line:max-line-length
+      console.warn(`hg-async-render: Multiple uids for different types of resolvers! Please use same uids for same type of components! No unique loads for ${this.constructor.name}!`);
+      return;
+    }
+    AsyncRenderResolver.resolverIdRecord[value] = { ctor: this.constructor, requested: false, delegate: new Subject() };
+  }
+
+  protected set autoUniqueId(value) {
+    if (!value) { return; }
+    this.uid = Symbol('Random Resolver Unique Id ');
   }
 
   set shouldSkip(value: boolean) {
@@ -72,7 +127,6 @@ export class AsyncRenderResolver<T, D = any> {
         this._dependencySubscription.unsubscribe();
         this._dependencySubscription = undefined;
       }
-      this._resolveRequested = false;
       this._state.errored = false;
       this._state.loading = false;
     }
@@ -84,7 +138,6 @@ export class AsyncRenderResolver<T, D = any> {
         (shouldAutoResolveOnce && this._shouldSkip)
       ) && value === false
     ) {
-      // asapScheduler.schedule(() => { this.resolve(true); });
       this.resolve(true);
     }
     this._shouldSkip = value;
@@ -103,9 +156,39 @@ export class AsyncRenderResolver<T, D = any> {
     private dependencies: () => (Observable<any> | any[]) | Observable<any> | Observable<any>[] = null
   ) { }
 
+
+  private delegate(delegate: Subject<any>) {
+    delegate.pipe(filter(e => e.type === 'success'), takeUntil(this._isAlive$)).subscribe(e => {
+      this._state.loading = false;
+      this._state.errored = false;
+      if (this.isFunctionObservableTarget) {
+        this._data = e.data;
+        this._data$.next(e.data);
+      }
+    });
+
+    delegate.pipe(filter(e => e.type === 'failure'), takeUntil(this._isAlive$)).subscribe(e => {
+      this._state.loading = false;
+      this._state.errored = true;
+      if (this.isFunctionObservableTarget) {
+        this._error = e.data;
+        this._error$.next(e.data);
+      }
+    });
+  }
+
   resolve(auto = false) {
-    if (this._resolveRequested || (auto && this._autoResolveOnceCompleted)) { return; }
-    this._resolveRequested = true;
+    const uniqueId = this._uniqueId;
+    const resolverIdRecordEntry = AsyncRenderResolver.resolverIdRecord[uniqueId] || { requested: false, delegate: null };
+    if (
+      resolverIdRecordEntry.requested ||
+      (auto && this._autoResolveOnceCompleted)
+    ) {
+      if (resolverIdRecordEntry) { this.delegate(resolverIdRecordEntry.delegate); }
+      return;
+    }
+
+    if (uniqueId) { AsyncRenderResolver.resolverIdRecord[uniqueId].requested = true; }
 
     if (this._dependencySubscription) { this._dependencySubscription.unsubscribe(); }
     const isAutoResolveOnceConfig = this.config === ResolverConfig.AutoResolveOnce;
@@ -116,7 +199,7 @@ export class AsyncRenderResolver<T, D = any> {
     asapScheduler.schedule(() => {
       this._state.errored = false;
       this._state.loading = true;
-      this.error = undefined;
+      this._error = undefined;
 
       let dependencies: any = this.dependencies;
       if (typeof this.dependencies === 'function') {
@@ -128,7 +211,11 @@ export class AsyncRenderResolver<T, D = any> {
       );
 
       this._dependencySubscription = deps.subscribe(data => {
-        this._resolveRequested = false;
+
+        const resolverDelegate = resolverIdRecordEntry.delegate;
+        if (uniqueId && resolverIdRecordEntry && this.config !== ResolverConfig.AutoResolve) {
+          resolverIdRecordEntry.requested = false;
+        }
 
         asapScheduler.schedule(() => {
           this._state.errored = false;
@@ -141,10 +228,12 @@ export class AsyncRenderResolver<T, D = any> {
           target.success$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
             this._state.loading = false;
             this._state.errored = false;
+            if (resolverDelegate) { resolverDelegate.next({ type: 'success', data: null }); }
           });
           target.failure$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
             this._state.loading = false;
             this._state.errored = true;
+            if (resolverDelegate) { resolverDelegate.next({ type: 'failure', data: null }); }
           });
         } else {
           const targetFn = this.targetFn as FunctionObservableTarget<T, D>;
@@ -154,12 +243,16 @@ export class AsyncRenderResolver<T, D = any> {
           }
           this._functionObservableSubscription = targetFn(data).pipe(takeUntil(this._isAlive$)).subscribe({
             next: res => {
+              this._data = res;
               this._data$.next(res);
+              if (resolverDelegate) { resolverDelegate.next({ type: 'success', data: res }); }
               this._state.loading = false;
               this._state.errored = false;
             },
             error: err => {
-              this.error = err;
+              this._error = err;
+              this._error$.next(err);
+              if (resolverDelegate) { resolverDelegate.next({ type: 'failure', data: err }); }
               this._state.loading = false;
               this._state.errored = true;
             },
@@ -178,10 +271,21 @@ export class AsyncRenderResolver<T, D = any> {
     this._isAlive$.next();
     this._isAlive$.complete();
 
+    if (this._uniqueId) {
+      const { [this._uniqueId]: deletedEntry, ...others } = AsyncRenderResolver.resolverIdRecord;
+      if (deletedEntry) { deletedEntry.delegate.complete(); }
+      AsyncRenderResolver.resolverIdRecord = others;
+    }
+
     if (!this._state.loading) { return; }
     const target = this.targetFn as IActionsTarget<T>;
     if (target.cancelAction) {
       target.cancelAction();
     }
+  }
+
+  // tslint:disable-next-line:use-lifecycle-interface
+  ngOnDestroy() {
+    this.destroy();
   }
 }

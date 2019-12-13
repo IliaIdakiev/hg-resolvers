@@ -14,6 +14,8 @@ import { IPost } from 'src/app/shared/interfaces';
 })
 export class PostsListResolverDirective extends AsyncRenderResolver<IPost[]> {
 
+  autoUniqueId = true;
+
   constructor(postService: PostService) {
     super(postService.loadPosts);
   }

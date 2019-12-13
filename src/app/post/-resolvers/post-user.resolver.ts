@@ -15,6 +15,8 @@ import { IUser } from 'src/app/shared/interfaces';
 })
 export class PostUserResolverDirective extends AsyncRenderResolver<IUser, [number]> {
 
+  uid = 1;
+
   @Input('appPostUserResolver') shouldSkip;
 
   @Input() @toObservable selectedId: Observable<number>;

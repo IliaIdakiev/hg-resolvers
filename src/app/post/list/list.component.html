@@ -41,3 +41,14 @@
     {{ postUserResolver.data$ | async | json }}
   </div>
 </hg-async-render>
+
+<h1>AAA!</h1>
+
+<hg-async-render [loaderTemplateRef]="postUserLoader" [errorTemplateRef]="postUserError"
+  [appPostUserResolver]="!selectedPost?.userId" #postUserResolver2="postUserResolver"
+  [selectedId]="selectedPost?.userId">
+
+  <div class="list-holder" *ngIf="(postUserResolver2.data$ | async) && !postUserResolver2.isLoading">
+    {{ postUserResolver2.data$ | async | json }}
+  </div>
+</hg-async-render>
