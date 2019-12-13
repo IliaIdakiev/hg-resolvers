@@ -48,34 +48,65 @@ import { AsyncRenderResolver, HG_ASYNC_RENDER_RESOLVER } from 'hg-async-render';
   ]
 })
 export class UserListAsyncResolverDirective extends AsyncRenderResolver {
+
+  // (Optional)
+  @Input('appUserPostDepAsyncResolver') shouldSkip: boolean; // Skipping a resolution
+  // Inside the template set the attribute binding appUserPostDepAsyncResolver ([appUserPostDepAsyncResolver]="true") 
+  // to the local shouldSkip property
+  
+  // (Optional / Default value: ResolverConfig.Default)
+  config: ResolverConfig = ResolverConfig.Default; // Resolver behaviour
+  // * ResolverConfig.Default - don't auto resolve when skip or a depenency changes/emits.
+  // * ResolverConfig.AutoResolve - auto resolve when skip or a depenency changes/emits.
+  // * ResolverConfig.AutoResolveOnce - auto resolve once when skip or a depenency changes/emits (look at the scenarios bellow).
+  // 
+  // ⚠️Scenarios for ResolverConfig.AutoResolveOnce:
+  // 1. if shouldSkip = true
+  //    the resolver will be skiped until the shouldSkip is set to false. When that happens a resolve will be triggered
+  // 2. if shouldSkip = false
+  //    the resolver will dispatch the resolve call and there won't be any auto resolves triggered 
+  //    (the only way to dispatch a resolve is via refresh$.next())
+
   constructor(service: YourService) {
-    super({
-      loadAction: service.loadUsers, // the method that dispatches the load action or sends the actual load request
-      cancelAction: service.cancelLoadUsers, // the method that dispatches the cancel load request or does the actual request cancellation
-      success$: service.userLoadSuccess$, // a RxJS stream that emits when the data is loaded successfuly
-      failure$: service.userLoadFailure$ // a RxJS stream that emits when the data fails to load
-    });
+    // When you are using a service directly you can pass the method that reurns the http observable stream
+    super(serice.loadUsers);
+    // DEPENDENCIES (Optional)
+    // If we have dependencies that the loadUsers function needs to accept you can pass them as a second argument.
+    // the accepted type for the dependecies is dependencies?: () => (Observable<any> | any[]) | Observable<any> | Observable<any>[]
+
+    // NGRX or something similar:
+    // super({
+    //   loadAction: service.loadUsers, // the method that dispatches the load action or sends the actual load request
+    //   cancelAction: service.cancelLoadUsers, // the method that dispatches the cancel load request or does the actual request cancellation
+    //   success$: service.userLoadSuccess$, // a RxJS stream that emits when the data is loaded successfuly
+    //   failure$: service.userLoadFailure$ // a RxJS stream that emits when the data fails to load
+    // });
   }
 }
 
 ```
 
-### 3. Use the async render component and the resolver from step.2 (you can also use [hgAsyncRender] directive - [look here](https://github.com/IliaIdakiev/async-render#1-use-the-async-render-directive-to-skip-the-additional-element-added-and-use-a-custom-loader))
+### 3. Use the hg-async-render.component or the [[hgAsyncRender] directive](https://github.com/IliaIdakiev/async-render#1-use-the-async-render-directive-to-skip-the-additional-element-added-and-use-a-custom-loader) and add the resolver from step.2
 ```html
 <!-- If you want you can create a loader template that will be used while loading -->
 <ng-template #loader let-isLoading>
   <app-loader loaderSize="small" [visible]="isLoading" [localLoader]="true"></app-loader>
 </ng-template>
+<ng-template #error let-hasError let-errors="errors">
+  <div *ngIf="hasError">{{errors | json}}</div>
+</ng-template>
 <div>  
   <!-- Or you can use the userListAsyncRender template variable to manually show hide a loader or a unicorn -->
   <div>UserListIsLoading: {{userListAsyncRender.isLoading}}</div>
-  <!-- You can use the refresh$.next() to trigger a reload if necessary -->
+  <!-- You can use the refresh$.next() or just call the resolve() method to trigger a reload if necessary -->
   <button (click)="userListAsyncRender.refresh$.next()">Reload Users</button>
-  <!-- Use the hg-async-render component and feed it with our shiny loader. Alos put the appUserListAsyncResolver directive that we've created in task 2 (don't forget to put it inside the declarations array inside your module before using it). If you need multiple resolvers for the current async-render just put all the directives on the opening tag -->
-  <hg-async-render [loaderTemplateRef]="loader" #userListAsyncRender="asyncRender" appUserListAsyncResolver>
+  <!-- Use the hg-async-render component and feed it with our shiny loader. Also put the appUserListAsyncResolver directive that we've created in task 2 (don't forget to put it inside the declarations array inside your module before using it). If you need multiple resolvers for the current async-render just put all the directives on the opening tag -->
+  <hg-async-render [loaderTemplateRef]="loader" [errorTemplateRef]="error" #userListAsyncRender="asyncRender" appUserListAsyncResolver>
+    <!-- If you don't want to manage when the error and loader shows you can also provide [autoControlLoader]="true" or [autoControlError]="true" to delegate the showing and hiding of the templates to the async-render component -->
     <h1>User List</h1>
     <ul>
-      <li *ngFor="let user of users$ | async"> {{ user.email }}</li>
+      <!-- every resolver has a data$ observable property from where you can access the data directly in the template -->
+      <li *ngFor="let user of (userListAsyncRender.data$ | async)"> {{ user.email }}</li>
     </ul>
   </hg-async-render>
 </div>
@@ -85,8 +116,17 @@ Async Render Component Inputs:
 ```typescript
 @Input() loaderTemplateRef: TemplateRef<any>; // the template that will be used for the loader
 @Input() errorTemplateRef: TemplateRef<any>; // the template that will be used for the error
-@Input() autoHideLoader = false; // auto hide the loader template on loading
-@Input() autoShowError = false; // auth show the error template on error
+@Input() autoControlLoader = false; // auto hide/show the loader template on loading
+@Input() autoControlError = false; // auth hide/show the error template on error
+```
+
+Async Render Properties:
+```typescript
+  errors: Error[]; // an array with all the errors
+  isLoading: boolean;
+  hasError: boolean;
+  refresh$: Subject<boolean>
+  resolve(): () => void;
 ```
 
 ### [4. DEMO](https://stackblitz.com/github/IliaIdakiev/async-render)
@@ -97,10 +137,10 @@ Async Render Component Inputs:
 ```html
 <div>UserPostDepIsLoading (Directive): {{asyncRender.isLoading}}</div>
 <button (click)="asyncRender.refresh$.next()">Reload User Post</button>
-<ng-template hgAsyncRender #asyncRender="asyncRender" appUserPostDepAsyncResolver>
+<ng-container hgAsyncRender #asyncRender="asyncRender" appUserPostDepAsyncResolver>
   <h1>Post</h1>
   {{ post$ | async | json }}
-</ng-template>
+</ng-container>
 ```
 ⚠️**Since the directive is rendering the template there is no loaderTemplateRef binding. But it's not actually needed since you can just put the loader itself info the template and use the template varialbe to access the state**
 
