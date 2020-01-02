@@ -2,7 +2,7 @@ import { Directive, Inject, Optional, OnDestroy, TemplateRef, ViewContainerRef, 
 import { Subject } from 'rxjs';
 import { Resolver } from './resolver';
 import { AsyncRenderBase } from './resolve-base';
-import { HG_RESOLVERSS } from './injection-tokens';
+import { HG_RESOLVERS } from './injection-tokens';
 
 @Directive({
   selector: '[hgResolve]',
@@ -13,7 +13,7 @@ export class ResolveDirective extends AsyncRenderBase implements OnInit, OnDestr
   refresh$: Subject<void> = new Subject();
 
   constructor(
-    @Inject(HG_RESOLVERSS) @Optional() resolvers: Resolver<any>[] = [],
+    @Inject(HG_RESOLVERS) @Optional() resolvers: Resolver<any>[] = [],
     viewContainerRef: ViewContainerRef,
     @Optional() templateRef: TemplateRef<any>,
   ) {

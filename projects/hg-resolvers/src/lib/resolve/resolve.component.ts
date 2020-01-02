@@ -2,7 +2,7 @@ import { Component, Input, OnDestroy, Inject, TemplateRef, Optional, OnInit } fr
 import { Subject } from 'rxjs';
 import { Resolver } from '../resolver';
 import { AsyncRenderBase } from '../resolve-base';
-import { HG_RESOLVERSS } from '../injection-tokens';
+import { HG_RESOLVERS } from '../injection-tokens';
 
 @Component({
   selector: 'hg-resolve',
@@ -19,7 +19,7 @@ export class ResolveComponent extends AsyncRenderBase implements OnInit, OnDestr
   @Input() autoControlLoader = false;
   @Input() autoControlError = false;
 
-  constructor(@Inject(HG_RESOLVERSS) @Optional() resolvers: Resolver<any>[] = []) {
+  constructor(@Inject(HG_RESOLVERS) @Optional() resolvers: Resolver<any>[] = []) {
     super(resolvers);
     this.refresh$.subscribe(() => { this.resolve(); });
   }
