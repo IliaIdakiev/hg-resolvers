@@ -7,7 +7,7 @@ import { PostsListResolverDirective } from './-resolvers/list.resolver';
 import { PostRoutingModule } from './post-routing.module';
 import { SharedModule } from '../shared/shared.module';
 import { MatTableModule } from '@angular/material';
-import { AsyncRenderModule } from 'hg-async-render';
+import { HGResolversModule } from 'hg-resolvers';
 
 @NgModule({
   declarations: [
@@ -21,7 +21,7 @@ import { AsyncRenderModule } from 'hg-async-render';
     PostRoutingModule,
     MatTableModule,
     SharedModule,
-    AsyncRenderModule
+    HGResolversModule
   ]
 })
 export class PostModule { }

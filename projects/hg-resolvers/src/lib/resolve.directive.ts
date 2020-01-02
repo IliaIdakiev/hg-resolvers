@@ -1,18 +1,19 @@
 import { Directive, Inject, Optional, OnDestroy, TemplateRef, ViewContainerRef, OnInit } from '@angular/core';
-import { AsyncRenderResolver, HG_ASYNC_RENDER_RESOLVER } from '../lib/async-render-resolver';
-import { AsyncRenderBase } from './async-render-base';
 import { Subject } from 'rxjs';
+import { Resolver } from './resolver';
+import { AsyncRenderBase } from './resolve-base';
+import { HG_RESOLVERSS } from './injection-tokens';
 
 @Directive({
-  selector: '[hgAsyncRender]',
-  exportAs: 'asyncRender'
+  selector: '[hgResolve]',
+  exportAs: 'hgResolve'
 })
-export class AsyncRenderDirective extends AsyncRenderBase implements OnInit, OnDestroy {
+export class ResolveDirective extends AsyncRenderBase implements OnInit, OnDestroy {
 
   refresh$: Subject<void> = new Subject();
 
   constructor(
-    @Inject(HG_ASYNC_RENDER_RESOLVER) @Optional() resolvers: AsyncRenderResolver<any>[] = [],
+    @Inject(HG_RESOLVERSS) @Optional() resolvers: Resolver<any>[] = [],
     viewContainerRef: ViewContainerRef,
     @Optional() templateRef: TemplateRef<any>,
   ) {

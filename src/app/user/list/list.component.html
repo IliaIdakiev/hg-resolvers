@@ -4,8 +4,8 @@
   a reload. We are also skipping the user posts resolver when there is no user selected.</i>
 <br />
 <button (click)="reloadAll()">Reload All</button>
-<app-loader [visible]="asyncRender.isLoading">
-  <ng-container hgAsyncRender #asyncRender="asyncRender" appUserListResolver #userListResolver="userListResolver"
+<app-loader [visible]="hgResolve.isLoading">
+  <ng-container hgResolve #hgResolve="hgResolve" appUserListResolver #userListResolver="userListResolver"
     [appUserPostsResolver]="!selectedElementId" #userPostsResolver="userPostsResolver" [selectedId]="selectedElementId">
     <h1>Users</h1>
     <button (click)="reloadUserList()">Reload User List</button>

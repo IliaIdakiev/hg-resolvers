@@ -1,5 +1,5 @@
 import { Directive, Input } from '@angular/core';
-import { HG_ASYNC_RENDER_RESOLVER, AsyncRenderResolver, ResolverConfig, toObservable } from 'hg-async-render';
+import { HG_RESOLVERS, Resolver, ResolverConfig, toObservable } from 'hg-resolvers';
 import { PostService } from '../post.service';
 import { Observable } from 'rxjs';
 import { IUser } from 'src/app/shared/interfaces';
@@ -7,13 +7,13 @@ import { IUser } from 'src/app/shared/interfaces';
 @Directive({
   selector: '[appPostUserResolver]',
   providers: [{
-    provide: HG_ASYNC_RENDER_RESOLVER,
+    provide: HG_RESOLVERS,
     useExisting: PostUserResolverDirective,
     multi: true
   }],
   exportAs: 'postUserResolver'
 })
-export class PostUserResolverDirective extends AsyncRenderResolver<IUser, [number]> {
+export class PostUserResolverDirective extends Resolver<IUser, [number]> {
 
   uid = 1;
 

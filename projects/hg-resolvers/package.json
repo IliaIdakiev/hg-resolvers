@@ -1,6 +1,6 @@
 {
-  "name": "hg-async-render",
-  "version": "3.1.0",
+  "name": "hg-resolvers",
+  "version": "4.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/IliaIdakiev/async-render"

@@ -5,7 +5,7 @@ import { EntityComponent } from './entity/entity.component';
 import { UserRoutingModule } from './user-routing.module';
 import { UserListResolverDirective } from './-resolvers/list.resover';
 import { MatTableModule } from '@angular/material';
-import { AsyncRenderModule } from 'hg-async-render';
+import { HGResolversModule } from 'hg-resolvers';
 import { SharedModule } from '../shared/shared.module';
 import { UserPostsResolverDirective } from './-resolvers/user-posts.resolver';
 
@@ -21,7 +21,7 @@ import { UserPostsResolverDirective } from './-resolvers/user-posts.resolver';
     MatTableModule,
     UserRoutingModule,
     SharedModule,
-    AsyncRenderModule
+    HGResolversModule
   ]
 })
 export class UserModule { }

@@ -1,18 +1,18 @@
 import { Directive } from '@angular/core';
-import { HG_ASYNC_RENDER_RESOLVER, AsyncRenderResolver } from 'hg-async-render';
+import { HG_RESOLVERS, Resolver } from 'hg-resolvers';
 import { UserService } from '../user.service';
 import { IUser } from 'src/app/shared/interfaces';
 
 @Directive({
   selector: '[appUserListResolver]',
   providers: [{
-    provide: HG_ASYNC_RENDER_RESOLVER,
+    provide: HG_RESOLVERS,
     useExisting: UserListResolverDirective,
     multi: true
   }],
   exportAs: 'userListResolver'
 })
-export class UserListResolverDirective extends AsyncRenderResolver<IUser[]> {
+export class UserListResolverDirective extends Resolver<IUser[]> {
 
   constructor(userService: UserService) {
     super(userService.loadUsers);

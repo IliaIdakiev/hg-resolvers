@@ -2,6 +2,6 @@
   <ng-container *ngTemplateOutlet="loaderTemplateRef; context: { $implicit: isLoading }"></ng-container>
 </ng-container>
 <ng-container *ngIf="errorTemplateRef && (!autoControlError || hasError)">
-  <ng-container *ngTemplateOutlet="errorTemplateRef; context: { $implicit: hasError, errors: errors }"></ng-container>
+  <ng-container *ngTemplateOutlet="errorTemplateRef; context: { $implicit: hasError, errors: _errors }"></ng-container>
 </ng-container>
 <ng-content></ng-content>

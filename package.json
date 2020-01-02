@@ -1,5 +1,5 @@
 {
-  "name": "hg-async-render",
+  "name": "hg-resolvers",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -8,7 +8,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "pack": "cp ./README.md ./projects/hg-async-render/README.md && cp ./LICENSE ./projects/hg-async-render/LICENSE && ng build hg-async-render"
+    "pack": "cp ./README.md ./projects/hg-resolvers/README.md && cp ./LICENSE ./projects/hg-resolvers/LICENSE && ng build hg-resolvers"
   },
   "private": true,
   "dependencies": {

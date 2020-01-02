@@ -1,8 +1,6 @@
-import { first, takeUntil, filter } from 'rxjs/operators';
-import { asapScheduler, Subject, Observable, combineLatest, of, Subscription, ReplaySubject } from 'rxjs';
-import { InjectionToken } from '@angular/core';
-
-export const HG_ASYNC_RENDER_RESOLVER = new InjectionToken<string>('HG_ASYNC_RENDER_RESOLVER');
+import { first, takeUntil, filter, withLatestFrom, observeOn } from 'rxjs/operators';
+import { asapScheduler, Observable, combineLatest, of, Subscription, ReplaySubject, Subject, asyncScheduler } from 'rxjs';
+import { diff, NOTHING } from './utils/differ';
 
 export enum ResolverConfig {
   Default,
@@ -19,11 +17,20 @@ interface IActionsTarget<D> {
 
 type FunctionObservableTarget<T, D> = (deps: D) => Observable<T>;
 
-export class AsyncRenderResolver<T, D = any> {
+export class Resolver<T, D = any> {
 
   private static resolverIdRecord: {
-    [
-    id: string]: { ctor: any, requested: boolean, delegate: Subject<{ type: 'success' | 'failure', data: any | Error }> }
+    [renderId: string]: {
+      [resolverId: string]: {
+        asyncRenderId: any,
+        ctor: any,
+        requested: boolean,
+        resolved: boolean,
+        delegate: ReplaySubject<{
+          type: 'deps' | 'success' | 'failure', data: any | Error
+        }>
+      }
+    }
   } = {};
 
   protected config = ResolverConfig.Default;
@@ -49,7 +56,7 @@ export class AsyncRenderResolver<T, D = any> {
   // tslint:disable-next-line:variable-name
   private _data$ = new ReplaySubject<T>(1);
   // tslint:disable-next-line:variable-name
-  private _data: T;
+  private _data: T = null;
 
   // tslint:disable-next-line:variable-name
   private _error$ = new ReplaySubject<T>(1);
@@ -65,6 +72,8 @@ export class AsyncRenderResolver<T, D = any> {
   // tslint:disable-next-line:variable-name
   private _functionObservableSubscription: Subscription;
 
+  public resolved = false;
+
   get isLoading() { return this._state.loading; }
 
   get hasErrored() { return this._state.errored; }
@@ -72,45 +81,67 @@ export class AsyncRenderResolver<T, D = any> {
   get error(): Error {
     if (this.isFunctionObservableTarget) { return this._error; }
     // tslint:disable-next-line:max-line-length
-    console.warn('hg-async-render: Action based async render resolvers don\'t have error property! Data management should be outsourced!');
+    console.warn('hg-resolvers: Action based async render resolvers don\'t have error property! Data management should be outsourced!');
     return undefined;
   }
 
   get data(): T {
     if (this.isFunctionObservableTarget) { return this._data; }
     // tslint:disable-next-line:max-line-length
-    console.warn('hg-async-render: Action based async render resolvers don\'t have data property! Data management should be outsourced!');
+    console.warn('hg-resolvers: Action based async render resolvers don\'t have data property! Data management should be outsourced!');
     return undefined;
   }
 
   public get data$() {
     if (this.isFunctionObservableTarget) { return this._dataObservable$; }
     // tslint:disable-next-line:max-line-length
-    console.warn('hg-async-render: Action based async render resolvers don\'t have data$ property! Data management should be outsourced!');
+    console.warn('hg-resolvers: Action based async render resolvers don\'t have data$ property! Data management should be outsourced!');
     return undefined;
   }
 
   public get error$() {
     if (this.isFunctionObservableTarget) { return this._errorObservable$; }
     // tslint:disable-next-line:max-line-length
-    console.warn('hg-async-render: Action based async render resolvers don\'t have error$ property! Data management should be outsourced!');
+    console.warn('hg-resolvers: Action based async render resolvers don\'t have error$ property! Data management should be outsourced!');
     return undefined;
   }
 
-  protected set uid(value: any) {
+  protected set uid(value: any) { this._uniqueId = value; }
+
+  // tslint:disable-next-line:variable-name
+  private __parentRenderId__ = null;
+
+  set __parentRenderId(value: any) {
     if (!this.constructor) {
       // tslint:disable-next-line:max-line-length
-      console.warn('hg-async-render: Missing constructor property! Unique id loads are not possible without the constructor property!');
+      console.warn('hg-resolvers: Missing constructor property! Unique id loads are not possible without the constructor property!');
       return;
     }
-    this._uniqueId = value;
-    const existingRecord = AsyncRenderResolver.resolverIdRecord[value];
-    if (existingRecord && existingRecord.ctor !== this.constructor) {
-      // tslint:disable-next-line:max-line-length
-      console.warn(`hg-async-render: Multiple uids for different types of resolvers! Please use same uids for same type of components! No unique loads for ${this.constructor.name}!`);
-      return;
+
+    if (this._uniqueId) {
+      const existingRenderRecord = Resolver.resolverIdRecord[value];
+      const existingResolverRecord = existingRenderRecord && existingRenderRecord[this._uniqueId] || null;
+
+      if (existingResolverRecord && existingResolverRecord.ctor !== this.constructor) {
+        // tslint:disable-next-line:max-line-length
+        console.warn(`hg-resolvers: Multiple uids for different types of resolvers! Please use same uids for same type of components! No unique loads for ${this.constructor.name}!`);
+        return;
+      }
+
+      if (!Resolver.resolverIdRecord[value]) { Resolver.resolverIdRecord[value] = {}; }
+      if (!existingRenderRecord) {
+        Resolver.resolverIdRecord[value][this._uniqueId] = {
+          ctor: this.constructor,
+          requested: false,
+          delegate: new ReplaySubject(1),
+          asyncRenderId: value,
+          resolved: false
+        };
+      }
+
     }
-    AsyncRenderResolver.resolverIdRecord[value] = { ctor: this.constructor, requested: false, delegate: new Subject() };
+
+    this.__parentRenderId__ = value;
   }
 
   protected set autoUniqueId(value) {
@@ -157,7 +188,21 @@ export class AsyncRenderResolver<T, D = any> {
   ) { }
 
 
-  private delegate(delegate: Subject<any>) {
+  private delegate(delegate: ReplaySubject<any>) {
+
+    delegate.pipe(
+      observeOn(asyncScheduler),
+      filter(e => e.type === 'deps'),
+      withLatestFrom(this.getDeps()),
+      takeUntil(this._isAlive$)
+    ).subscribe(([{ data: otherDeps }, currentDeps]) => {
+      const dataDiff = diff(otherDeps, currentDeps);
+      if (dataDiff !== NOTHING) {
+        // tslint:disable-next-line:max-line-length
+        console.warn(`hg-resolvers (${this.constructor.name}): Two different resolver dependency values received! You must remove the autoUniqueId or the matching uids that you\'ve provided!`);
+      }
+    });
+
     delegate.pipe(filter(e => e.type === 'success'), takeUntil(this._isAlive$)).subscribe(e => {
       this._state.loading = false;
       this._state.errored = false;
@@ -177,22 +222,48 @@ export class AsyncRenderResolver<T, D = any> {
     });
   }
 
+  private getResolverEntry() {
+    if (!this._uniqueId || !this.__parentRenderId__) { return null; }
+    return Resolver.resolverIdRecord[this.__parentRenderId__][this._uniqueId];
+
+  }
+
+  private getDeps() {
+    const isAutoResolveOnceConfig = this.config === ResolverConfig.AutoResolveOnce;
+    const isDefaultConfig = this.config === ResolverConfig.Default;
+
+    let dependencies: any = this.dependencies;
+    if (typeof this.dependencies === 'function') {
+      dependencies = this.dependencies();
+      if (Array.isArray(dependencies)) { dependencies = [dependencies]; }
+    }
+    return !dependencies ? of(undefined) : combineLatest(dependencies).pipe(
+      (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this._isAlive$)
+    );
+  }
+
   resolve(auto = false) {
     const uniqueId = this._uniqueId;
-    const resolverIdRecordEntry = AsyncRenderResolver.resolverIdRecord[uniqueId] || { requested: false, delegate: null };
+    const resolverIdRecordEntry = this.getResolverEntry();
+
     if (
-      resolverIdRecordEntry.requested ||
+      resolverIdRecordEntry && (resolverIdRecordEntry.requested || resolverIdRecordEntry.resolved) ||
       (auto && this._autoResolveOnceCompleted)
     ) {
-      if (resolverIdRecordEntry) { this.delegate(resolverIdRecordEntry.delegate); }
+      if (resolverIdRecordEntry) {
+        this.delegate(resolverIdRecordEntry.delegate);
+      }
       return;
     }
 
-    if (uniqueId) { AsyncRenderResolver.resolverIdRecord[uniqueId].requested = true; }
+    if (resolverIdRecordEntry) {
+      resolverIdRecordEntry.requested = true;
+      resolverIdRecordEntry.resolved = false;
+    }
+    this.resolved = false;
 
     if (this._dependencySubscription) { this._dependencySubscription.unsubscribe(); }
     const isAutoResolveOnceConfig = this.config === ResolverConfig.AutoResolveOnce;
-    const isDefaultConfig = this.config === ResolverConfig.Default;
 
     if (isAutoResolveOnceConfig) { this._autoResolveOnceCompleted = true; }
 
@@ -201,18 +272,12 @@ export class AsyncRenderResolver<T, D = any> {
       this._state.loading = true;
       this._error = undefined;
 
-      let dependencies: any = this.dependencies;
-      if (typeof this.dependencies === 'function') {
-        dependencies = this.dependencies();
-        if (Array.isArray(dependencies)) { dependencies = [dependencies]; }
-      }
-      const deps = !dependencies ? of(undefined) : combineLatest(dependencies).pipe(
-        (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this._isAlive$)
-      );
+      const deps = this.getDeps();
 
       this._dependencySubscription = deps.subscribe(data => {
 
-        const resolverDelegate = resolverIdRecordEntry.delegate;
+        const resolverDelegate = resolverIdRecordEntry && resolverIdRecordEntry.delegate;
+        if (resolverDelegate) { resolverDelegate.next({ type: 'deps', data }); }
         if (uniqueId && resolverIdRecordEntry && this.config !== ResolverConfig.AutoResolve) {
           resolverIdRecordEntry.requested = false;
         }
@@ -228,12 +293,22 @@ export class AsyncRenderResolver<T, D = any> {
           target.success$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
             this._state.loading = false;
             this._state.errored = false;
-            if (resolverDelegate) { resolverDelegate.next({ type: 'success', data: null }); }
+
+            this.resolved = true;
+            if (resolverDelegate) {
+              resolverDelegate.next({ type: 'success', data: null });
+              resolverIdRecordEntry.resolved = true;
+            }
           });
           target.failure$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
             this._state.loading = false;
             this._state.errored = true;
-            if (resolverDelegate) { resolverDelegate.next({ type: 'failure', data: null }); }
+
+            this.resolved = true;
+            if (resolverDelegate) {
+              resolverDelegate.next({ type: 'failure', data: null });
+              resolverIdRecordEntry.resolved = true;
+            }
           });
         } else {
           const targetFn = this.targetFn as FunctionObservableTarget<T, D>;
@@ -245,14 +320,22 @@ export class AsyncRenderResolver<T, D = any> {
             next: res => {
               this._data = res;
               this._data$.next(res);
-              if (resolverDelegate) { resolverDelegate.next({ type: 'success', data: res }); }
+              this.resolved = true;
+              if (resolverDelegate) {
+                resolverDelegate.next({ type: 'success', data: res });
+                resolverIdRecordEntry.resolved = true;
+              }
               this._state.loading = false;
               this._state.errored = false;
             },
             error: err => {
               this._error = err;
               this._error$.next(err);
-              if (resolverDelegate) { resolverDelegate.next({ type: 'failure', data: err }); }
+              this.resolved = true;
+              if (resolverDelegate) {
+                resolverDelegate.next({ type: 'failure', data: err });
+                resolverIdRecordEntry.resolved = true;
+              }
               this._state.loading = false;
               this._state.errored = true;
             },
@@ -272,9 +355,9 @@ export class AsyncRenderResolver<T, D = any> {
     this._isAlive$.complete();
 
     if (this._uniqueId) {
-      const { [this._uniqueId]: deletedEntry, ...others } = AsyncRenderResolver.resolverIdRecord;
+      const { [this.__parentRenderId__]: { [this._uniqueId]: deletedEntry, ...inner }, ...outer } = Resolver.resolverIdRecord;
       if (deletedEntry) { deletedEntry.delegate.complete(); }
-      AsyncRenderResolver.resolverIdRecord = others;
+      Resolver.resolverIdRecord[this.__parentRenderId__] = { ...outer, [this.__parentRenderId__]: inner };
     }
 
     if (!this._state.loading) { return; }

@@ -1,35 +1,41 @@
 import { Component, ViewChild, ViewChildren, QueryList } from '@angular/core';
 import { PostsListResolverDirective } from '../-resolvers/list.resolver';
 import { PostUserResolverDirective } from '../-resolvers/post-user.resolver';
-import { AsyncRenderComponent } from 'hg-async-render';
+import { ResolveComponent } from 'hg-resolvers';
 
 @Component({
   selector: 'app-list',
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.scss']
 })
-export class ListComponent  {
+export class ListComponent {
 
-  @ViewChildren(AsyncRenderComponent) asyncRenderComponents: QueryList<AsyncRenderComponent>;
+  hello = false;
+
+  @ViewChildren(ResolveComponent) asyncRenderComponents: QueryList<ResolveComponent>;
 
   @ViewChild(PostsListResolverDirective, { static: true }) postsListResolver: PostsListResolverDirective;
   @ViewChild(PostUserResolverDirective, { static: true }) postUserResolver: PostUserResolverDirective;
 
+  noAttach = false;
   selectedPost = null;
   displayedColumns = ['title'];
 
-  constructor() { }
+  constructor() {
+  }
 
   select(row) {
     if (this.selectedPost === row) { this.selectedPost = null; return; }
     this.selectedPost = row;
+
+    setTimeout(() => {
+      this.hello = true;
+    }, 5000);
   }
 
   reloadPostsList() {
     this.postsListResolver.resolve();
     // or this.asyncRenderComponents.first.refresh$.next();
-    const a = this.postsListResolver;
-    console.log(a);
   }
 
   reloadPostUser() {

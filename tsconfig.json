@@ -19,11 +19,11 @@
       "dom"
     ],
     "paths": {
-      "hg-async-render": [
-        "dist/hg-async-render"
+      "hg-resolvers": [
+        "dist/hg-resolvers"
       ],
-      "hg-async-render/*": [
-        "dist/hg-async-render/*"
+      "hg-resolvers/*": [
+        "dist/hg-resolvers/*"
       ]
     }
   },

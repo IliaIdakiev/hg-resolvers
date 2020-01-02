@@ -4,7 +4,7 @@
 
 <ng-template #postsLoader>Loading...</ng-template>
 <ng-template #postsError let-error>{{error | json }}</ng-template>
-<hg-async-render [loaderTemplateRef]="postsLoader" [errorTemplateRef]="postsError" [autoControlError]="true"
+<hg-resolve [loaderTemplateRef]="postsLoader" [errorTemplateRef]="postsError" [autoControlError]="true"
   [autoControlLoader]="true" appPostsListResolver #postsListResolver="postsListResolver">
   <h1>Posts</h1>
   <button (click)="reloadPostsList()">Reload User List</button>
@@ -21,34 +21,55 @@
         [ngClass]="{ 'selected': selectedPost === row }"></tr>
     </table>
   </div>
-</hg-async-render>
+</hg-resolve>
 
 <h1>Post User</h1>
-<button (click)="reloadPostUser()">Reload Post User</button>
-<ng-template #postUserLoader let-isLoading>
-  <div *ngIf="isLoading">Loading...</div>
-</ng-template>
+<div *ngIf="noAttach">
+  <button (click)="reloadPostUser()">Reload Post User</button>
+  <ng-template #postUserLoader let-isLoading>
+    <div *ngIf="isLoading">Loading...</div>
+  </ng-template>
 
-<ng-template #postUserError let-hasError let-errors="errors">
-  <div *ngIf="hasError">Error: {{errors | json}}</div>
-</ng-template>
+  <ng-template #postUserError let-hasError let-errors="errors">
+    <div *ngIf="hasError">Error: {{errors | json}}</div>
+  </ng-template>
 
-<hg-async-render [loaderTemplateRef]="postUserLoader" [errorTemplateRef]="postUserError"
-  [appPostUserResolver]="!selectedPost?.userId" #postUserResolver="postUserResolver"
-  [selectedId]="selectedPost?.userId">
+  <hg-resolve [loaderTemplateRef]="postUserLoader" [errorTemplateRef]="postUserError"
+    [appPostUserResolver]="!selectedPost?.userId" #postUserResolver="postUserResolver"
+    [selectedId]="selectedPost?.userId">
 
-  <div class="list-holder" *ngIf="(postUserResolver.data$ | async) && !postUserResolver.isLoading">
-    {{ postUserResolver.data$ | async | json }}
+    <div class="list-holder" *ngIf="(postUserResolver.data$ | async) && !postUserResolver.isLoading">
+      {{ postUserResolver.data$ | async | json }}
+    </div>
+  </hg-resolve>
+
+  <h1>AAA!</h1>
+
+  <hg-resolve [loaderTemplateRef]="postUserLoader" [errorTemplateRef]="postUserError"
+    [appPostUserResolver]="!selectedPost?.userId" #postUserResolver2="postUserResolver"
+    [selectedId]="selectedPost?.userId">
+
+    <div class="list-holder" *ngIf="(postUserResolver2.data$ | async) && !postUserResolver2.isLoading">
+      {{ postUserResolver2.data$ | async | json }}
+    </div>
+  </hg-resolve>
+</div>
+<div *ngIf="!noAttach">
+  <div hgResolve>
+    <div hgResolveAttach [appPostUserResolver]="!selectedPost?.userId" #postUserResolver3="postUserResolver"
+      [selectedId]="selectedPost?.userId">
+      {{ postUserResolver3.data$ | async | json }}
+    </div>
+    <div hgResolveAttach [appPostUserResolver]="!selectedPost?.userId" #postUserResolver4="postUserResolver"
+      [selectedId]="selectedPost?.userId">
+      {{ postUserResolver4.data$ | async | json }}
+    </div>
+
+    <ng-container *ngIf="hello">
+      <div hgResolveAttach [appPostUserResolver]="!selectedPost?.userId" #postUserResolver5="postUserResolver"
+        [selectedId]="selectedPost?.userId">
+        {{ postUserResolver5.data$ | async | json }}
+      </div>
+    </ng-container>
   </div>
-</hg-async-render>
-
-<h1>AAA!</h1>
-
-<hg-async-render [loaderTemplateRef]="postUserLoader" [errorTemplateRef]="postUserError"
-  [appPostUserResolver]="!selectedPost?.userId" #postUserResolver2="postUserResolver"
-  [selectedId]="selectedPost?.userId">
-
-  <div class="list-holder" *ngIf="(postUserResolver2.data$ | async) && !postUserResolver2.isLoading">
-    {{ postUserResolver2.data$ | async | json }}
-  </div>
-</hg-async-render>
+</div>

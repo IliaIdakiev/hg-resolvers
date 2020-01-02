@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { UserListResolverDirective } from '../-resolvers/list.resover';
 import { UserPostsResolverDirective } from '../-resolvers/user-posts.resolver';
-import { AsyncRenderDirective } from 'hg-async-render';
+import { ResolveDirective } from 'hg-resolvers';
 
 @Component({
   selector: 'app-list',
@@ -16,7 +16,7 @@ export class ListComponent implements OnInit {
 
   @ViewChild(UserListResolverDirective, { static: true }) userListResolver: UserListResolverDirective;
   @ViewChild(UserPostsResolverDirective, { static: true }) userPostsResolver: UserPostsResolverDirective;
-  @ViewChild(AsyncRenderDirective, { static: true }) asyncRender: AsyncRenderDirective;
+  @ViewChild(ResolveDirective, { static: true }) asyncRender: ResolveDirective;
 
   constructor() { }
 
