@@ -19,7 +19,8 @@ export class ResolveAttachDirective<T> implements OnDestroy {
   ) {
     this.container = resolveCmpInstance || resolveDirInstance || null;
     if (!this.container) {
-      console.warn('No async render found!');
+      console.warn('hg-resolvers: No async render found!');
+      this.resolvers.forEach(r => (r as any)._noParentContainerFound = true);
       return;
     }
     this.resolvers.map(r => this.container.attachResolver(r));

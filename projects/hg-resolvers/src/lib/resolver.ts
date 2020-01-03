@@ -39,6 +39,9 @@ export class Resolver<T, D = any> {
   private _isAlive$: Subject<void> = new Subject();
 
   // tslint:disable-next-line:variable-name
+  private _noParentContainerFound = false;
+
+  // tslint:disable-next-line:variable-name
   private _shouldSkip = null;
 
   // tslint:disable-next-line:variable-name
@@ -169,7 +172,7 @@ export class Resolver<T, D = any> {
         (shouldAutoResolveOnce && this._shouldSkip)
       ) && value === false
     ) {
-      this.resolve(true);
+      asyncScheduler.schedule(() => { this.resolve(true); });
     }
     this._shouldSkip = value;
   }
@@ -243,6 +246,11 @@ export class Resolver<T, D = any> {
   }
 
   resolve(auto = false) {
+    if (this._noParentContainerFound) {
+      console.warn('hg-resolvers: Skipping resolve since no parent resolve container was found!');
+      return;
+    }
+
     const uniqueId = this._uniqueId;
     const resolverIdRecordEntry = this.getResolverEntry();
 
