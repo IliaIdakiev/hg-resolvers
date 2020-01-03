@@ -1,9 +1,9 @@
 {
   "name": "hg-resolvers",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "repository": {
     "type": "git",
-    "url": "https://github.com/IliaIdakiev/async-render"
+    "url": "https://github.com/IliaIdakiev/hg-resolvers"
   },
   "license": "MIT",
   "peerDependencies": {
@@ -11,10 +11,10 @@
     "@angular/core": "^8.2.11"
   },
   "keywords": [
-    "async",
-    "resolver",
-    "render",
     "angular",
-    "suspense"
+    "resolver",
+    "resolving-data",
+    "suspense",
+    "angular-suspense"
   ]
 }

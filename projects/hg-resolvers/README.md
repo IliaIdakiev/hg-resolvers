@@ -42,12 +42,12 @@ import { Resolver, HG_RESOLVERS } from 'hg-resolvers';
   providers: [
     {
       provide: HG_RESOLVERS, // use this injector token
-      useExisting: UserListAsyncResolverDirective, // use the name of your directive
+      useExisting: UserListResolverDirective, // use the name of your directive
       multi: true // use milti providers
     }
   ]
 })
-export class UserListAsyncResolverDirective extends Resolver {
+export class UserListResolverDirective extends Resolver {
   constructor(service: YourService) {
     super({
       loadAction: service.loadUsers, // the method that dispatches the load action or sends the actual load request
@@ -97,7 +97,7 @@ Resolve Component Inputs:
 ```html
 <div>UserPostDepIsLoading (Directive): {{hgResolve.isLoading}}</div>
 <button (click)="hgResolve.refresh$.next()">Reload User Post</button>
-<ng-template hgResolve #hgResolve="hgResolve" appUserPostDepAsyncResolver>
+<ng-template hgResolve #hgResolve="hgResolve" appUserPostDepResolver>
   <h1>Post</h1>
   {{ post$ | async | json }}
 </ng-template>
@@ -179,8 +179,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class SimpleUserListResolverDirective extends Resolver {
 
-  // transfer the appUserListAsyncResolver input into shouldSkip that is used inside 
-  // AsyncRenderResolver to skip the current resolver
+  // transfer the appSimpleUserListResolver input into shouldSkip to skip the current resolver
 
   // tslint:disable-next-line:no-input-rename
   @Input('appSimpleUserListResolver') shouldSkip;
