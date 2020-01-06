@@ -283,11 +283,6 @@ export class Resolver<T, D = any> {
           resolverIdRecordEntry.requested = false;
         }
 
-        asapScheduler.schedule(() => {
-          this._state.errored = false;
-          this._state.loading = true;
-        });
-
         if (!this.isFunctionObservableTarget) {
           const target = this.targetFn as IActionsTarget<T>;
           target.loadAction(data);
