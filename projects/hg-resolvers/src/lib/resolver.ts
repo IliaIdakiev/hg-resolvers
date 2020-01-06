@@ -171,16 +171,6 @@ export class Resolver<T, D = any> {
       this._state.loading = false;
     }
 
-    // we should not call resolve here !!!!
-    // const shouldAutoResolveOnce = (this.config === ResolverConfig.AutoResolveOnce && this._autoResolveOnceCompleted === false);
-    // if (
-    //   (
-    //     (this.config === ResolverConfig.AutoResolve && this._shouldSkip === true) ||
-    //     (shouldAutoResolveOnce && this._shouldSkip)
-    //   ) && value === false
-    // ) {
-    //   asyncScheduler.schedule(() => { this.resolve(true); });
-    // }
     this._shouldSkip = value;
   }
 
