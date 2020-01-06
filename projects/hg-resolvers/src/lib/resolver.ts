@@ -86,7 +86,7 @@ export class Resolver<T, D = any> {
 
   get isPending() { return this._state.loading === false && this._state.errored === false; }
 
-  get hasErrored() { return this._state.errored; }
+  get isErrored() { return this._state.errored; }
 
   get error(): Error {
     if (this.isFunctionObservableTarget) { return this._error; }
@@ -341,8 +341,6 @@ export class Resolver<T, D = any> {
               this._state.errored = true;
             },
             complete: () => {
-              this._state.loading = false;
-              this._state.errored = false;
               this._functionObservableSubscription = undefined;
             }
           });

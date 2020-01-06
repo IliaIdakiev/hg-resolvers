@@ -45,7 +45,7 @@ export class AsyncRenderBase {
   }
 
   get hasError() {
-    return this.resolvers.reduce((acc, res) => acc || res.hasErrored, false);
+    return this.resolvers.reduce((acc, res) => acc || res.isErrored, false);
   }
 
   protected destroy() {
