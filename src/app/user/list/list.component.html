@@ -5,8 +5,9 @@
 <br />
 <button (click)="reloadAll()">Reload All</button>
 <app-loader [visible]="hgResolve.isLoading">
-  <ng-container hgResolve #hgResolve="hgResolve" appUserListResolver #userListResolver="userListResolver"
-    [appUserPostsResolver]="!selectedElementId" #userPostsResolver="userPostsResolver" [selectedId]="selectedElementId">
+  <ng-container hgResolve [resolveOnInit]="true" #hgResolve="hgResolve" appUserListResolver
+    #userListResolver="userListResolver" [appUserPostsResolver]="!selectedElementId"
+    #userPostsResolver="userPostsResolver" [selectedId]="selectedElementId">
     <h1>Users</h1>
     <button (click)="reloadUserList()">Reload User List</button>
     <div class="list-holder">

@@ -14,8 +14,6 @@ import { IPost } from 'src/app/shared/interfaces';
 })
 export class PostsListResolverDirective extends Resolver<IPost[]> {
 
-  // autoUniqueId = true;
-
   constructor(postService: PostService) {
     super(postService.loadPosts);
   }

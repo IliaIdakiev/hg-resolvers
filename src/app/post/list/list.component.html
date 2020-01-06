@@ -4,8 +4,8 @@
 
 <ng-template #postsLoader>Loading...</ng-template>
 <ng-template #postsError let-error>{{error | json }}</ng-template>
-<hg-resolve [loaderTemplateRef]="postsLoader" [errorTemplateRef]="postsError" [autoControlError]="true"
-  [autoControlLoader]="true" appPostsListResolver #postsListResolver="postsListResolver">
+<hg-resolve [resolveOnInit]="true" [loaderTemplateRef]="postsLoader" [errorTemplateRef]="postsError"
+  [autoControlError]="true" [autoControlLoader]="true" appPostsListResolver #postsListResolver="postsListResolver">
   <h1>Posts</h1>
   <button (click)="reloadPostsList()">Reload User List</button>
   <div class="list-holder">
@@ -34,7 +34,7 @@
     <div *ngIf="hasError">Error: {{errors | json}}</div>
   </ng-template>
 
-  <hg-resolve [loaderTemplateRef]="postUserLoader" [errorTemplateRef]="postUserError"
+  <hg-resolve [resolveOnInit]="true" [loaderTemplateRef]="postUserLoader" [errorTemplateRef]="postUserError"
     [appPostUserResolver]="!selectedPost?.userId" #postUserResolver="postUserResolver"
     [selectedId]="selectedPost?.userId">
 
@@ -45,7 +45,7 @@
 
   <h1>AAA!</h1>
 
-  <hg-resolve [loaderTemplateRef]="postUserLoader" [errorTemplateRef]="postUserError"
+  <hg-resolve [resolveOnInit]="true" [loaderTemplateRef]="postUserLoader" [errorTemplateRef]="postUserError"
     [appPostUserResolver]="!selectedPost?.userId" #postUserResolver2="postUserResolver"
     [selectedId]="selectedPost?.userId">
 
