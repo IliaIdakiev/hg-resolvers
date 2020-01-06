@@ -26,7 +26,7 @@ export class AsyncRenderBase {
     }
 
     asapScheduler.schedule(() => {
-      if (!resolver.resolved && !resolver.shouldSkip) {
+      if (!resolver.isResolved && !resolver.shouldSkip) {
         resolver.resolve();
       }
     });

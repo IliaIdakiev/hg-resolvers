@@ -80,9 +80,11 @@ export class Resolver<T, D = any> {
   // tslint:disable-next-line:variable-name
   private _processing = false;
 
-  public resolved = false;
+  public readonly isResolved = false;
 
   get isLoading() { return this._state.loading; }
+
+  get isPending() { return this._state.loading === false && this._state.errored === false; }
 
   get hasErrored() { return this._state.errored; }
 
@@ -259,7 +261,7 @@ export class Resolver<T, D = any> {
       resolverIdRecordEntry.requested = true;
       resolverIdRecordEntry.resolved = false;
     }
-    this.resolved = false;
+    (this as any).isResolved = false;
 
     if (this._dependencySubscription) { this._dependencySubscription.unsubscribe(); }
     const isAutoResolveOnceConfig = this.config === ResolverConfig.AutoResolveOnce;
@@ -293,7 +295,7 @@ export class Resolver<T, D = any> {
             this._state.loading = false;
             this._state.errored = false;
 
-            this.resolved = true;
+            (this as any).isResolved = true;
             if (resolverDelegate) {
               resolverDelegate.next({ type: 'success', data: null });
               resolverIdRecordEntry.resolved = true;
@@ -303,7 +305,7 @@ export class Resolver<T, D = any> {
             this._state.loading = false;
             this._state.errored = true;
 
-            this.resolved = true;
+            (this as any).isResolved = true;
             if (resolverDelegate) {
               resolverDelegate.next({ type: 'failure', data: null });
               resolverIdRecordEntry.resolved = true;
@@ -319,7 +321,7 @@ export class Resolver<T, D = any> {
             next: res => {
               this._data = res;
               this._data$.next(res);
-              this.resolved = true;
+              (this as any).isResolved = true;
               if (resolverDelegate) {
                 resolverDelegate.next({ type: 'success', data: res });
                 resolverIdRecordEntry.resolved = true;
@@ -330,7 +332,7 @@ export class Resolver<T, D = any> {
             error: err => {
               this._error = err;
               this._error$.next(err);
-              this.resolved = true;
+              (this as any).isResolved = true;
               if (resolverDelegate) {
                 resolverDelegate.next({ type: 'failure', data: err });
                 resolverIdRecordEntry.resolved = true;
