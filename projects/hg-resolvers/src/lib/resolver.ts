@@ -78,6 +78,9 @@ export class Resolver<T, D = any> {
   // tslint:disable-next-line:variable-name
   private _functionObservableSubscription: Subscription;
 
+  // tslint:disable-next-line:variable-name
+  private _processing = false;
+
   public resolved = false;
 
   get isLoading() { return this._state.loading; }
@@ -375,18 +378,26 @@ export class Resolver<T, D = any> {
   }
 
   // tslint:disable-next-line:use-lifecycle-interface
-  ngOnDestroy() {
-    this.destroy();
-  }
+  ngOnDestroy() { this.destroy(); }
 
   // tslint:disable-next-line:use-lifecycle-interface
-  ngOnChanges(simpleChanges: SimpleChanges) {
-    if (this._shouldSkip === true) { return; }
+  ngOnInit() { this._process(); }
 
-    const isAutoResolve = this.config === ResolverConfig.AutoResolve;
-    if (isAutoResolve) { this.resolve(true); return; }
+  // tslint:disable-next-line:use-lifecycle-interface
+  ngOnChanges() { this._process(); }
 
-    const isAutoResolveOnce = this.config === ResolverConfig.AutoResolveOnce;
-    if (isAutoResolveOnce && this._autoResolveOnceCompleted === false) { this.resolve(true); }
+  _process() {
+    if (this._processing) { return; }
+    this._processing = true;
+    Promise.resolve().then(() => {
+      this._processing = false;
+      if (this._shouldSkip === true) { return; }
+
+      const isAutoResolve = this.config === ResolverConfig.AutoResolve;
+      if (isAutoResolve) { this.resolve(true); return; }
+
+      const isAutoResolveOnce = this.config === ResolverConfig.AutoResolveOnce;
+      if (isAutoResolveOnce && this._autoResolveOnceCompleted === false) { this.resolve(true); }
+    });
   }
 }
