@@ -14,6 +14,8 @@ export class ResolveComponent extends AsyncRenderBase implements OnInit, OnDestr
 
   refresh$: Subject<void> = new Subject();
 
+  @Input() resolveOnInit = false;
+
   @Input() loaderTemplateRef: TemplateRef<any>;
   @Input() errorTemplateRef: TemplateRef<any>;
   @Input() autoControlLoader = false;
@@ -21,11 +23,12 @@ export class ResolveComponent extends AsyncRenderBase implements OnInit, OnDestr
 
   constructor(@Inject(HG_RESOLVERS) @Optional() resolvers: Resolver<any>[] = []) {
     super(resolvers);
+    (resolvers || []).forEach(r => (r as any).parentContainer = this);
     this.refresh$.subscribe(() => { this.resolve(); });
   }
 
   ngOnInit() {
-    this.resolve();
+    if (this.resolveOnInit) { this.resolve(); }
   }
 
   ngOnDestroy() {

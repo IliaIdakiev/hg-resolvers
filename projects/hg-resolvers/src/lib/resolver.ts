@@ -1,6 +1,9 @@
 import { first, takeUntil, filter, withLatestFrom, observeOn } from 'rxjs/operators';
 import { asapScheduler, Observable, combineLatest, of, Subscription, ReplaySubject, Subject, asyncScheduler } from 'rxjs';
 import { diff, NOTHING } from './utils/differ';
+import { ResolveComponent } from './resolve/resolve.component';
+import { ResolveDirective } from './resolve.directive';
+import { SimpleChanges } from '@angular/core';
 
 export enum ResolverConfig {
   Default,
@@ -39,7 +42,7 @@ export class Resolver<T, D = any> {
   private _isAlive$: Subject<void> = new Subject();
 
   // tslint:disable-next-line:variable-name
-  private _noParentContainerFound = false;
+  protected parentContainer: ResolveComponent | ResolveDirective = null;
 
   // tslint:disable-next-line:variable-name
   private _shouldSkip = null;
@@ -165,15 +168,16 @@ export class Resolver<T, D = any> {
       this._state.loading = false;
     }
 
-    const shouldAutoResolveOnce = (this.config === ResolverConfig.AutoResolveOnce && this._autoResolveOnceCompleted === false);
-    if (
-      (
-        (this.config === ResolverConfig.AutoResolve && this._shouldSkip === true) ||
-        (shouldAutoResolveOnce && this._shouldSkip)
-      ) && value === false
-    ) {
-      asyncScheduler.schedule(() => { this.resolve(true); });
-    }
+    // we should not call resolve here !!!!
+    // const shouldAutoResolveOnce = (this.config === ResolverConfig.AutoResolveOnce && this._autoResolveOnceCompleted === false);
+    // if (
+    //   (
+    //     (this.config === ResolverConfig.AutoResolve && this._shouldSkip === true) ||
+    //     (shouldAutoResolveOnce && this._shouldSkip)
+    //   ) && value === false
+    // ) {
+    //   asyncScheduler.schedule(() => { this.resolve(true); });
+    // }
     this._shouldSkip = value;
   }
 
@@ -246,11 +250,6 @@ export class Resolver<T, D = any> {
   }
 
   resolve(auto = false) {
-    if (this._noParentContainerFound) {
-      console.warn('hg-resolvers: Skipping resolve since no parent resolve container was found!');
-      return;
-    }
-
     const uniqueId = this._uniqueId;
     const resolverIdRecordEntry = this.getResolverEntry();
 
@@ -378,5 +377,16 @@ export class Resolver<T, D = any> {
   // tslint:disable-next-line:use-lifecycle-interface
   ngOnDestroy() {
     this.destroy();
+  }
+
+  // tslint:disable-next-line:use-lifecycle-interface
+  ngOnChanges(simpleChanges: SimpleChanges) {
+    if (this._shouldSkip === true) { return; }
+
+    const isAutoResolve = this.config === ResolverConfig.AutoResolve;
+    if (isAutoResolve) { this.resolve(true); return; }
+
+    const isAutoResolveOnce = this.config === ResolverConfig.AutoResolveOnce;
+    if (isAutoResolveOnce && this._autoResolveOnceCompleted === false) { this.resolve(true); }
   }
 }
