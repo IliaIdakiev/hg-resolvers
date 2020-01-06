@@ -3,12 +3,11 @@ import { asapScheduler, Observable, combineLatest, of, Subscription, ReplaySubje
 import { diff, NOTHING } from './utils/differ';
 import { ResolveComponent } from './resolve/resolve.component';
 import { ResolveDirective } from './resolve.directive';
-import { SimpleChanges } from '@angular/core';
 
 export enum ResolverConfig {
-  Default,
-  AutoResolveOnce,
-  AutoResolve
+  Default = 'Default',
+  AutoResolveOnce = 'AutoResolveOnce',
+  AutoResolve = 'AutoResolve'
 }
 
 interface IActionsTarget<D> {
@@ -36,7 +35,7 @@ export class Resolver<T, D = any> {
     }
   } = {};
 
-  protected config = ResolverConfig.Default;
+  public config = ResolverConfig.Default;
 
   // tslint:disable-next-line:variable-name
   private _isAlive$: Subject<void> = new Subject();
@@ -371,7 +370,16 @@ export class Resolver<T, D = any> {
   ngOnDestroy() { this.destroy(); }
 
   // tslint:disable-next-line:use-lifecycle-interface
-  ngOnInit() { this._process(); }
+  ngOnInit() {
+    asapScheduler.schedule(() => {
+      if (this.parentContainer) {
+        if (!(this.parentContainer.resolveOnInit &&
+          (this.config === ResolverConfig.AutoResolve || this.config === ResolverConfig.AutoResolveOnce))
+        ) { return; }
+      }
+      this._process();
+    });
+  }
 
   // tslint:disable-next-line:use-lifecycle-interface
   ngOnChanges() { this._process(); }

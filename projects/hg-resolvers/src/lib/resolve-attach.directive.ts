@@ -23,7 +23,7 @@ export class ResolveAttachDirective<T> implements OnDestroy {
       return;
     }
     this.resolvers.map(r => {
-      (r as any)._parentContainer = this.container;
+      (r as any).parentContainer = this.container;
       this.container.attachResolver(r);
     });
   }

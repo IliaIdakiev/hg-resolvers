@@ -1,4 +1,4 @@
-import { Resolver } from './resolver';
+import { Resolver, ResolverConfig } from './resolver';
 
 const ids = [];
 
@@ -54,7 +54,14 @@ export class AsyncRenderBase {
   public resolve() {
     Promise.resolve().then(() => {
       this.resolvers.forEach(res => {
-        if (res.shouldSkip) { return; }
+        const isAutoConfig = [ResolverConfig.AutoResolve, ResolverConfig.AutoResolveOnce].includes(res.config);
+        if (res.shouldSkip || isAutoConfig) {
+          if (isAutoConfig) {
+            // tslint:disable-next-line:max-line-length
+            console.warn(`hg-resolvers: resolveOnInit container and ${res.config} @ ${Object.getPrototypeOf(res).constructor.name} found! Skipping container resolveOnInit!`);
+          }
+          return;
+        }
         res.resolve();
       });
     });
