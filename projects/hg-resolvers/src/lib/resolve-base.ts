@@ -1,4 +1,5 @@
 import { Resolver, ResolverConfig } from './resolver';
+import { asapScheduler } from 'rxjs';
 
 const ids = [];
 
@@ -24,7 +25,7 @@ export class AsyncRenderBase {
       this.isFunctionObservableTargetDirectivesCount++;
     }
 
-    Promise.resolve().then(() => {
+    asapScheduler.schedule(() => {
       if (!resolver.resolved && !resolver.shouldSkip) {
         resolver.resolve();
       }
@@ -52,7 +53,7 @@ export class AsyncRenderBase {
   }
 
   public resolve() {
-    Promise.resolve().then(() => {
+    asapScheduler.schedule(() => {
       this.resolvers.forEach(res => {
         const isAutoConfig = [ResolverConfig.AutoResolve, ResolverConfig.AutoResolveOnce].includes(res.config);
         if (res.shouldSkip || isAutoConfig) {

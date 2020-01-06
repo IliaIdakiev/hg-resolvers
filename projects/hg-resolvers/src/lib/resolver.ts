@@ -387,7 +387,7 @@ export class Resolver<T, D = any> {
   _process() {
     if (this._processing) { return; }
     this._processing = true;
-    Promise.resolve().then(() => {
+    asapScheduler.schedule(() => {
       this._processing = false;
       if (this._shouldSkip === true) { return; }
 
