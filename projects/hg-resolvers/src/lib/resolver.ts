@@ -279,6 +279,10 @@ export class Resolver<T, D = any> {
       return;
     }
 
+    if (uniqueId && resolverIdRecordEntry) {
+      resolverIdRecordEntry.requested = false;
+    }
+
     if (resolverIdRecordEntry) {
       resolverIdRecordEntry.requested = true;
       resolverIdRecordEntry.resolved = false;
@@ -301,12 +305,12 @@ export class Resolver<T, D = any> {
         // Needed - Handles the state when config is AutoResolve
         (this as any).isResolved = false;
         (this as any).isResolvedSuccessfully = false;
+        if (uniqueId && resolverIdRecordEntry) {
+          resolverIdRecordEntry.requested = false;
+        }
 
         const resolverDelegate = resolverIdRecordEntry && resolverIdRecordEntry.delegate;
         if (resolverDelegate) { resolverDelegate.next({ type: 'deps', data }); }
-        if (uniqueId && resolverIdRecordEntry && this.config !== ResolverConfig.AutoResolve) {
-          resolverIdRecordEntry.requested = false;
-        }
 
         if (!this.isFunctionObservableTarget) {
           const target = this.targetFn as IActionsTarget<T>;
@@ -322,6 +326,10 @@ export class Resolver<T, D = any> {
               resolverDelegate.next({ type: 'success', data: null });
               resolverIdRecordEntry.resolved = true;
             }
+
+            if (uniqueId && resolverIdRecordEntry) {
+              resolverIdRecordEntry.requested = false;
+            }
           });
           target.failure$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
             this._state.loading = false;
@@ -333,6 +341,10 @@ export class Resolver<T, D = any> {
             if (resolverDelegate) {
               resolverDelegate.next({ type: 'failure', data: null });
               resolverIdRecordEntry.resolved = true;
+            }
+
+            if (uniqueId && resolverIdRecordEntry) {
+              resolverIdRecordEntry.requested = false;
             }
           });
         } else {
@@ -355,6 +367,10 @@ export class Resolver<T, D = any> {
               }
               this._state.loading = false;
               this._state.errored = false;
+
+              if (uniqueId && resolverIdRecordEntry) {
+                resolverIdRecordEntry.requested = false;
+              }
             },
             error: err => {
               this._error = err;
@@ -369,6 +385,10 @@ export class Resolver<T, D = any> {
               }
               this._state.loading = false;
               this._state.errored = true;
+
+              if (uniqueId && resolverIdRecordEntry) {
+                resolverIdRecordEntry.requested = false;
+              }
             },
             complete: () => {
               this._functionObservableSubscription = undefined;
