@@ -81,6 +81,7 @@ export class Resolver<T, D = any> {
   private _processing = false;
 
   public readonly isResolved = false;
+  public readonly isResolvedSuccessfully = false;
 
   get isLoading() { return this._state.loading; }
 
@@ -262,6 +263,7 @@ export class Resolver<T, D = any> {
       resolverIdRecordEntry.resolved = false;
     }
     (this as any).isResolved = false;
+    (this as any).isResolvedSuccessfully = false;
 
     if (this._dependencySubscription) { this._dependencySubscription.unsubscribe(); }
     const isAutoResolveOnceConfig = this.config === ResolverConfig.AutoResolveOnce;
@@ -291,6 +293,7 @@ export class Resolver<T, D = any> {
             this._state.errored = false;
 
             (this as any).isResolved = true;
+            (this as any).isResolvedSuccessfully = true;
             if (resolverDelegate) {
               resolverDelegate.next({ type: 'success', data: null });
               resolverIdRecordEntry.resolved = true;
@@ -301,6 +304,7 @@ export class Resolver<T, D = any> {
             this._state.errored = true;
 
             (this as any).isResolved = true;
+            (this as any).isResolvedSuccessfully = false;
             if (resolverDelegate) {
               resolverDelegate.next({ type: 'failure', data: null });
               resolverIdRecordEntry.resolved = true;
@@ -317,6 +321,7 @@ export class Resolver<T, D = any> {
               this._data = res;
               this._data$.next(res);
               (this as any).isResolved = true;
+              (this as any).isResolvedSuccessfully = true;
               if (resolverDelegate) {
                 resolverDelegate.next({ type: 'success', data: res });
                 resolverIdRecordEntry.resolved = true;
@@ -328,6 +333,7 @@ export class Resolver<T, D = any> {
               this._error = err;
               this._error$.next(err);
               (this as any).isResolved = true;
+              (this as any).isResolvedSuccessfully = false;
               if (resolverDelegate) {
                 resolverDelegate.next({ type: 'failure', data: err });
                 resolverIdRecordEntry.resolved = true;
