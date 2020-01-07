@@ -29,7 +29,8 @@ export class Resolver<T, D = any> {
         ctor: any,
         requested: boolean,
         resolved: boolean,
-        delegate: ReplaySubject<{
+        delegateInstance: Resolver<any>,
+        delegateChannel: ReplaySubject<{
           type: 'deps' | 'success' | 'failure', data: any | Error
         }>
       }
@@ -82,6 +83,9 @@ export class Resolver<T, D = any> {
 
   // tslint:disable-next-line:variable-name
   private _processing = false;
+
+  // tslint:disable-next-line:variable-name
+  private _isDelegated = false;
 
   public readonly isResolved = false;
   public readonly isResolvedSuccessfully = false;
@@ -147,7 +151,8 @@ export class Resolver<T, D = any> {
         Resolver.resolverIdRecord[value][this._uniqueId] = {
           ctor: this.constructor,
           requested: false,
-          delegate: new ReplaySubject(1),
+          delegateInstance: this,
+          delegateChannel: new ReplaySubject(1),
           asyncRenderId: value,
           resolved: false
         };
@@ -239,6 +244,8 @@ export class Resolver<T, D = any> {
         this._error$.next(e.data);
       }
     });
+
+    this._isDelegated = true;
   }
 
   private getResolverEntry() {
@@ -274,13 +281,11 @@ export class Resolver<T, D = any> {
       (auto && this._autoResolveOnceCompleted)
     ) {
       if (resolverIdRecordEntry) {
-        this.delegate(resolverIdRecordEntry.delegate);
+        if (auto === false && this._isDelegated) {
+          resolverIdRecordEntry.delegateInstance.resolve(false);
+        } else if (!this._isDelegated) { this.delegate(resolverIdRecordEntry.delegateChannel); }
       }
       return;
-    }
-
-    if (uniqueId && resolverIdRecordEntry) {
-      resolverIdRecordEntry.requested = false;
     }
 
     if (resolverIdRecordEntry) {
@@ -309,7 +314,7 @@ export class Resolver<T, D = any> {
           resolverIdRecordEntry.requested = false;
         }
 
-        const resolverDelegate = resolverIdRecordEntry && resolverIdRecordEntry.delegate;
+        const resolverDelegate = resolverIdRecordEntry && resolverIdRecordEntry.delegateChannel;
         if (resolverDelegate) { resolverDelegate.next({ type: 'deps', data }); }
 
         if (!this.isFunctionObservableTarget) {
@@ -405,7 +410,7 @@ export class Resolver<T, D = any> {
 
     if (this._uniqueId) {
       const { [this.__parentRenderId__]: { [this._uniqueId]: deletedEntry, ...inner }, ...outer } = Resolver.resolverIdRecord;
-      if (deletedEntry) { deletedEntry.delegate.complete(); }
+      if (deletedEntry) { deletedEntry.delegateChannel.complete(); }
       Resolver.resolverIdRecord[this.__parentRenderId__] = { ...outer, [this.__parentRenderId__]: inner };
     }
 
