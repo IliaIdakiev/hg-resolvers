@@ -25,6 +25,7 @@ export class ResolveAttachDirective<T> implements OnDestroy {
     this.resolvers.map(r => {
       (r as any).parentContainer = this.container;
       this.container.attachResolver(r);
+      (r as any)._isAttached = true;
     });
   }
 

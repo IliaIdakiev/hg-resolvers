@@ -87,6 +87,9 @@ export class Resolver<T, D = any> {
   // tslint:disable-next-line:variable-name
   private _isDelegated = false;
 
+  // tslint:disable-next-line:variable-name
+  private _isAttached = false;
+
   public readonly isResolved = false;
   public readonly isResolvedSuccessfully = false;
 
@@ -276,17 +279,26 @@ export class Resolver<T, D = any> {
     (this as any).isResolved = false;
     (this as any).isResolvedSuccessfully = false;
 
-    if (
-      resolverIdRecordEntry && (resolverIdRecordEntry.requested || resolverIdRecordEntry.resolved) ||
-      (auto && this._autoResolveOnceCompleted)
-    ) {
-      if (resolverIdRecordEntry) {
-        if (auto === false && this._isDelegated) {
-          resolverIdRecordEntry.delegateInstance.resolve(false);
-        } else if (!this._isDelegated) { this.delegate(resolverIdRecordEntry.delegateChannel); }
+
+    if (resolverIdRecordEntry) {
+      if (auto === false && this._isDelegated) {
+        resolverIdRecordEntry.delegateInstance.resolve(false);
+      } else if (!this._isDelegated && resolverIdRecordEntry.delegateInstance !== this) {
+        this.delegate(resolverIdRecordEntry.delegateChannel);
       }
-      return;
+      if (this._isDelegated) { return; }
     }
+    // if (
+    //   resolverIdRecordEntry && (resolverIdRecordEntry.requested || resolverIdRecordEntry.resolved) ||
+    //   (auto && this._autoResolveOnceCompleted)
+    // ) {
+    //   if (resolverIdRecordEntry) {
+    //     if (auto === false && this._isDelegated) {
+    //       resolverIdRecordEntry.delegateInstance.resolve(false);
+    //     } else if (!this._isDelegated) { this.delegate(resolverIdRecordEntry.delegateChannel); }
+    //   }
+    //   return;
+    // }
 
     if (resolverIdRecordEntry) {
       resolverIdRecordEntry.requested = true;
@@ -440,13 +452,18 @@ export class Resolver<T, D = any> {
     this._processing = true;
     asapScheduler.schedule(() => {
       this._processing = false;
-      if (this._shouldSkip === true) { return; }
+      if (this._shouldSkip === true) {
+        if (this._dependencySubscription) { this._dependencySubscription.unsubscribe(); }
+        return;
+      }
 
+      // resolve only if we haven't subscribed already
       const isAutoResolve = this.config === ResolverConfig.AutoResolve;
-      if (isAutoResolve) { this.resolve(true); return; }
+      if (isAutoResolve && !this._dependencySubscription) { this.resolve(true); return; }
 
+      // resolve only if we haven't subscribed already
       const isAutoResolveOnce = this.config === ResolverConfig.AutoResolveOnce;
-      if (isAutoResolveOnce && this._autoResolveOnceCompleted === false) { this.resolve(true); }
+      if (isAutoResolveOnce && this._autoResolveOnceCompleted === false && !this._dependencySubscription) { this.resolve(true); }
     });
   }
 }
