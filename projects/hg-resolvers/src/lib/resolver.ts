@@ -293,17 +293,6 @@ export class Resolver<T, D = any> {
       }
       if (this._isDelegated) { return; }
     }
-    // if (
-    //   resolverIdRecordEntry && (resolverIdRecordEntry.requested || resolverIdRecordEntry.resolved) ||
-    //   (auto && this._autoResolveOnceCompleted)
-    // ) {
-    //   if (resolverIdRecordEntry) {
-    //     if (auto === false && this._isDelegated) {
-    //       resolverIdRecordEntry.delegateInstance.resolve(false);
-    //     } else if (!this._isDelegated) { this.delegate(resolverIdRecordEntry.delegateChannel); }
-    //   }
-    //   return;
-    // }
 
     if (resolverIdRecordEntry) {
       resolverIdRecordEntry.requested = true;
