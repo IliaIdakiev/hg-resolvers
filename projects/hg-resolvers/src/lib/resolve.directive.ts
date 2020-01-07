@@ -13,6 +13,7 @@ export class ResolveDirective extends AsyncRenderBase implements OnInit, OnDestr
   refresh$: Subject<void> = new Subject();
 
   @Input() resolveOnInit = false;
+  @Input() discardSkippedResolvers = true;
 
   constructor(
     @Inject(HG_RESOLVERS) @Optional() resolvers: Resolver<any>[] = [],

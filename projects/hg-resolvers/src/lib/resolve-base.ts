@@ -7,6 +7,7 @@ export class AsyncRenderBase {
 
   uniqueId: symbol;
   isFunctionObservableTargetDirectivesCount = 0;
+  discardSkippedResolvers;
 
   constructor(protected resolvers: Resolver<any>[] = []) {
     this.uniqueId = Symbol('Unique Async Render');
@@ -41,15 +42,21 @@ export class AsyncRenderBase {
   }
 
   get isResolved() {
-    return this.resolvers.reduce((acc, res) => acc && res.isResolved, true);
+    return this.resolvers.reduce((acc, res) =>
+      acc && this.discardSkippedResolvers ? res.shouldSkip || res.isResolved : res.isResolved, true
+    );
   }
 
   get isResolvedSuccessfully() {
-    return this.resolvers.reduce((acc, res) => acc && res.isResolvedSuccessfully, true);
+    return this.resolvers.reduce((acc, res) =>
+      acc && this.discardSkippedResolvers ? res.shouldSkip || res.isResolvedSuccessfully : res.isResolvedSuccessfully, true
+    );
   }
 
   get isLoading() {
-    return this.resolvers.reduce((acc, res) => acc && res.isLoading, true);
+    return this.resolvers.reduce((acc, res) =>
+      acc && this.discardSkippedResolvers ? res.shouldSkip || res.isLoading : res.isLoading, true
+    );
   }
 
   get isErrored() {

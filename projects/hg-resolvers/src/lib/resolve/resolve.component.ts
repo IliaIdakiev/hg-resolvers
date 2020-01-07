@@ -21,6 +21,7 @@ export class ResolveComponent extends AsyncRenderBase implements OnInit, OnDestr
   @Input() autoControlLoader = false;
   @Input() autoControlError = false;
   @Input() hideContentUntilResolvedSuccessfully = true;
+  @Input() discardSkippedResolvers = true;
 
   constructor(@Inject(HG_RESOLVERS) @Optional() resolvers: Resolver<any>[] = []) {
     super(resolvers);
