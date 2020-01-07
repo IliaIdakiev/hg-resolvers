@@ -40,11 +40,19 @@ export class AsyncRenderBase {
     }
   }
 
+  get isResolved() {
+    return this.resolvers.reduce((acc, res) => acc || res.isResolved, false);
+  }
+
+  get isResolvedSuccessfully() {
+    return this.resolvers.reduce((acc, res) => acc || res.isResolved, false);
+  }
+
   get isLoading() {
     return this.resolvers.reduce((acc, res) => acc || res.isLoading, false);
   }
 
-  get hasError() {
+  get isErrored() {
     return this.resolvers.reduce((acc, res) => acc || res.isErrored, false);
   }
 

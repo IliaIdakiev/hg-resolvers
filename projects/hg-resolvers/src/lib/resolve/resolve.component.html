@@ -1,7 +1,10 @@
-<ng-container *ngIf="loaderTemplateRef && (!autoControlLoader || isLoading)">
-  <ng-container *ngTemplateOutlet="loaderTemplateRef; context: { $implicit: isLoading }"></ng-container>
+<ng-container *ngIf="loaderTemplateRef && (!autoControlLoader || !isResolved)">
+  <ng-container *ngTemplateOutlet="loaderTemplateRef; context: { $implicit: !isResolved, loading: isLoading }">
+  </ng-container>
 </ng-container>
-<ng-container *ngIf="errorTemplateRef && (!autoControlError || hasError)">
-  <ng-container *ngTemplateOutlet="errorTemplateRef; context: { $implicit: hasError, errors: _errors }"></ng-container>
+<ng-container *ngIf="errorTemplateRef && (!autoControlError || isErrored)">
+  <ng-container *ngTemplateOutlet="errorTemplateRef; context: { $implicit: isErrored, errors: _errors }"></ng-container>
 </ng-container>
-<ng-content></ng-content>
+<ng-content
+  *ngIf="(hideContentUntilResolvedSuccessfully && isResolvedSuccessfully && !isErrored) || !hideContentUntilResolvedSuccessfully">
+</ng-content>
