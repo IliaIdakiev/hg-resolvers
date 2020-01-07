@@ -160,10 +160,11 @@ export class Resolver<T, D = any> {
 
   protected set autoUniqueId(value) {
     if (!value) { return; }
-    let uniqueId = Resolver.uniqueIds.get(this);
+    const prototypeCtor = Object.getPrototypeOf(this).constructor;
+    let uniqueId = Resolver.uniqueIds.get(prototypeCtor);
     if (!uniqueId) {
       uniqueId = Symbol('Random Resolver Unique Id');
-      Resolver.uniqueIds.set(this, uniqueId);
+      Resolver.uniqueIds.set(prototypeCtor, uniqueId);
     }
     this.uid = uniqueId;
   }
