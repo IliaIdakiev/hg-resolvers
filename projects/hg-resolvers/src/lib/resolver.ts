@@ -271,7 +271,12 @@ export class Resolver<T, D = any> {
     );
   }
 
-  resolve(auto = false) {
+  resolve() {
+    if (this.shouldSkip) { return; }
+    this._resolve();
+  }
+
+  private _resolve(auto = false) {
     const uniqueId = this._uniqueId;
     const resolverIdRecordEntry = this.getResolverEntry();
 
@@ -282,7 +287,7 @@ export class Resolver<T, D = any> {
 
     if (resolverIdRecordEntry) {
       if (auto === false && this._isDelegated) {
-        resolverIdRecordEntry.delegateInstance.resolve(false);
+        resolverIdRecordEntry.delegateInstance._resolve(false);
       } else if (!this._isDelegated && resolverIdRecordEntry.delegateInstance !== this) {
         this.delegate(resolverIdRecordEntry.delegateChannel);
       }
@@ -459,11 +464,11 @@ export class Resolver<T, D = any> {
 
       // resolve only if we haven't subscribed already
       const isAutoResolve = this.config === ResolverConfig.AutoResolve;
-      if (isAutoResolve && !this._dependencySubscription) { this.resolve(true); return; }
+      if (isAutoResolve && !this._dependencySubscription) { this._resolve(true); return; }
 
       // resolve only if we haven't subscribed already
       const isAutoResolveOnce = this.config === ResolverConfig.AutoResolveOnce;
-      if (isAutoResolveOnce && this._autoResolveOnceCompleted === false && !this._dependencySubscription) { this.resolve(true); }
+      if (isAutoResolveOnce && this._autoResolveOnceCompleted === false && !this._dependencySubscription) { this._resolve(true); }
     });
   }
 }

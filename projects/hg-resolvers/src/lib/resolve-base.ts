@@ -64,7 +64,7 @@ export class ResolverBase {
       this.resolvers.forEach(res => {
         const isAutoConfig = [ResolverConfig.AutoResolve, ResolverConfig.AutoResolveOnce].includes(res.config);
         if (res.shouldSkip || isAutoConfig) { return; }
-        res.resolve();
+        (res as any)._resolve();
       });
     });
   }
