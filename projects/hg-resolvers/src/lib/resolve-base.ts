@@ -41,19 +41,19 @@ export class AsyncRenderBase {
   }
 
   get isResolved() {
-    return this.resolvers.reduce((acc, res) => acc || res.isResolved, false);
+    return this.resolvers.reduce((acc, res) => acc && res.isResolved, true);
   }
 
   get isResolvedSuccessfully() {
-    return this.resolvers.reduce((acc, res) => acc || res.isResolved, false);
+    return this.resolvers.reduce((acc, res) => acc && res.isResolvedSuccessfully, true);
   }
 
   get isLoading() {
-    return this.resolvers.reduce((acc, res) => acc || res.isLoading, false);
+    return this.resolvers.reduce((acc, res) => acc && res.isLoading, true);
   }
 
   get isErrored() {
-    return this.resolvers.reduce((acc, res) => acc || res.isErrored, false);
+    return this.resolvers.reduce((acc, res) => acc && res.isErrored, true);
   }
 
   protected destroy() {

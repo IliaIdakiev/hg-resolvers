@@ -8,7 +8,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "pack": "cp ./README.md ./projects/hg-resolvers/README.md && cp ./LICENSE ./projects/hg-resolvers/LICENSE && ng build hg-resolvers"
+    "prepare": "cp ./README.md ./projects/hg-resolvers/README.md && cp ./LICENSE ./projects/hg-resolvers/LICENSE && ng build hg-resolvers"
   },
   "private": true,
   "dependencies": {
