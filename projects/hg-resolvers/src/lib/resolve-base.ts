@@ -64,13 +64,7 @@ export class AsyncRenderBase {
     asapScheduler.schedule(() => {
       this.resolvers.forEach(res => {
         const isAutoConfig = [ResolverConfig.AutoResolve, ResolverConfig.AutoResolveOnce].includes(res.config);
-        if (res.shouldSkip || isAutoConfig) {
-          if (isAutoConfig) {
-            // tslint:disable-next-line:max-line-length
-            console.warn(`hg-resolvers: resolveOnInit container and ${res.config} @ ${Object.getPrototypeOf(res).constructor.name} found! Skipping container resolveOnInit!`);
-          }
-          return;
-        }
+        if (res.shouldSkip || isAutoConfig) { return; }
         res.resolve();
       });
     });
