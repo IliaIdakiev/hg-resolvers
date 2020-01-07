@@ -256,6 +256,7 @@ export class Resolver<T, D = any> {
     const uniqueId = this._uniqueId;
     const resolverIdRecordEntry = this.getResolverEntry();
 
+    // Needed - Handles the state when we have a delegate
     (this as any).isResolved = false;
     (this as any).isResolvedSuccessfully = false;
 
@@ -287,6 +288,10 @@ export class Resolver<T, D = any> {
       const deps = this.getDeps();
 
       this._dependencySubscription = deps.subscribe(data => {
+
+        // Needed - Handles the state when config is AutoResolve
+        (this as any).isResolved = false;
+        (this as any).isResolvedSuccessfully = false;
 
         const resolverDelegate = resolverIdRecordEntry && resolverIdRecordEntry.delegate;
         if (resolverDelegate) { resolverDelegate.next({ type: 'deps', data }); }

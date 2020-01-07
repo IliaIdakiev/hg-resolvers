@@ -43,19 +43,19 @@ export class ResolverBase {
 
   get isResolved() {
     return this.resolvers.reduce((acc, res) =>
-      acc && this.discardSkippedResolvers ? res.shouldSkip || res.isResolved : res.isResolved, true
+      acc && (this.discardSkippedResolvers ? (res.shouldSkip || res.isResolved) : res.isResolved), true
     );
   }
 
   get isResolvedSuccessfully() {
     return this.resolvers.reduce((acc, res) =>
-      acc && this.discardSkippedResolvers ? res.shouldSkip || res.isResolvedSuccessfully : res.isResolvedSuccessfully, true
+      acc && (this.discardSkippedResolvers ? (res.shouldSkip || res.isResolvedSuccessfully) : res.isResolvedSuccessfully), true
     );
   }
 
   get isLoading() {
     return this.resolvers.reduce((acc, res) =>
-      acc && this.discardSkippedResolvers ? res.shouldSkip || res.isLoading : res.isLoading, true
+      acc && (this.discardSkippedResolvers ? (res.shouldSkip || res.isLoading) : res.isLoading), true
     );
   }
 
