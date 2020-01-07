@@ -1,7 +1,7 @@
 import { Component, Input, OnDestroy, Inject, TemplateRef, Optional, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { Resolver } from '../resolver';
-import { AsyncRenderBase } from '../resolve-base';
+import { ResolverBase } from '../resolve-base';
 import { HG_RESOLVERS } from '../injection-tokens';
 
 @Component({
@@ -10,7 +10,7 @@ import { HG_RESOLVERS } from '../injection-tokens';
   styleUrls: ['./resolve.component.scss'],
   exportAs: 'hgResolve'
 })
-export class ResolveComponent extends AsyncRenderBase implements OnInit, OnDestroy {
+export class ResolveComponent extends ResolverBase implements OnInit, OnDestroy {
 
   refresh$: Subject<void> = new Subject();
 

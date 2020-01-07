@@ -1,14 +1,14 @@
 import { Directive, Inject, Optional, OnDestroy, TemplateRef, ViewContainerRef, OnInit, Input } from '@angular/core';
 import { Subject } from 'rxjs';
 import { Resolver } from './resolver';
-import { AsyncRenderBase } from './resolve-base';
+import { ResolverBase } from './resolve-base';
 import { HG_RESOLVERS } from './injection-tokens';
 
 @Directive({
   selector: '[hgResolve]',
   exportAs: 'hgResolve'
 })
-export class ResolveDirective extends AsyncRenderBase implements OnInit, OnDestroy {
+export class ResolveDirective extends ResolverBase implements OnInit, OnDestroy {
 
   refresh$: Subject<void> = new Subject();
 

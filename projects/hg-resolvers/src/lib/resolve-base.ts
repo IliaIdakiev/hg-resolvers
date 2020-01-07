@@ -3,11 +3,11 @@ import { asapScheduler } from 'rxjs';
 
 const ids = [];
 
-export class AsyncRenderBase {
+export class ResolverBase {
 
   uniqueId: symbol;
   isFunctionObservableTargetDirectivesCount = 0;
-  discardSkippedResolvers;
+  discardSkippedResolvers = true;
 
   constructor(protected resolvers: Resolver<any>[] = []) {
     this.uniqueId = Symbol('Unique Async Render');

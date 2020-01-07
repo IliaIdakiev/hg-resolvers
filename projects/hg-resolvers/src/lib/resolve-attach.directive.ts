@@ -2,7 +2,7 @@ import { Directive, Inject, OnDestroy, Optional } from '@angular/core';
 import { ResolveComponent } from './resolve/resolve.component';
 import { Resolver } from './resolver';
 import { HG_RESOLVERS } from './injection-tokens';
-import { AsyncRenderBase } from './resolve-base';
+import { ResolverBase } from './resolve-base';
 import { ResolveDirective } from './resolve.directive';
 
 @Directive({
@@ -10,7 +10,7 @@ import { ResolveDirective } from './resolve.directive';
 })
 export class ResolveAttachDirective<T> implements OnDestroy {
 
-  container: AsyncRenderBase;
+  container: ResolverBase;
 
   constructor(
     @Optional() resolveCmpInstance: ResolveComponent,
