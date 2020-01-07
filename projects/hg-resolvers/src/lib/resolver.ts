@@ -373,11 +373,7 @@ export class Resolver<T, D = any> {
   // tslint:disable-next-line:use-lifecycle-interface
   ngOnInit() {
     asapScheduler.schedule(() => {
-      if (this.parentContainer) {
-        if (!(this.parentContainer.resolveOnInit &&
-          (this.config === ResolverConfig.AutoResolve || this.config === ResolverConfig.AutoResolveOnce))
-        ) { return; }
-      }
+      if (this.parentContainer && this.parentContainer.resolveOnInit && this.config === ResolverConfig.Default) { return; }
       this._process();
     });
   }
