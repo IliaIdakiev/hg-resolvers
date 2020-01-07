@@ -20,6 +20,7 @@ interface IActionsTarget<D> {
 type FunctionObservableTarget<T, D> = (deps: D) => Observable<T>;
 
 export class Resolver<T, D = any> {
+  private static uniqueIds = new WeakMap();
 
   private static resolverIdRecord: {
     [renderId: string]: {
@@ -36,6 +37,8 @@ export class Resolver<T, D = any> {
   } = {};
 
   public config = ResolverConfig.Default;
+
+
 
   // tslint:disable-next-line:variable-name
   private _isAlive$: Subject<void> = new Subject();
@@ -157,7 +160,12 @@ export class Resolver<T, D = any> {
 
   protected set autoUniqueId(value) {
     if (!value) { return; }
-    this.uid = Symbol('Random Resolver Unique Id ');
+    let uniqueId = Resolver.uniqueIds.get(this);
+    if (!uniqueId) {
+      uniqueId = Symbol('Random Resolver Unique Id');
+      Resolver.uniqueIds.set(this, uniqueId);
+    }
+    this.uid = uniqueId;
   }
 
   set shouldSkip(value: boolean) {
