@@ -1,4 +1,4 @@
-import { Directive, Inject, Optional, OnDestroy, TemplateRef, ViewContainerRef, OnInit, Input } from '@angular/core';
+import { Directive, Inject, Optional, OnDestroy, TemplateRef, ViewContainerRef, OnInit, Input, DoCheck } from '@angular/core';
 import { Subject } from 'rxjs';
 import { Resolver } from './resolver';
 import { ResolverBase } from './resolve-base';
@@ -8,12 +8,17 @@ import { HG_RESOLVERS } from './injection-tokens';
   selector: '[hgResolve]',
   exportAs: 'hgResolve'
 })
-export class ResolveDirective extends ResolverBase implements OnInit, OnDestroy {
+export class ResolveDirective extends ResolverBase implements OnInit, DoCheck, OnDestroy {
 
   refresh$: Subject<void> = new Subject();
 
   @Input() resolveOnInit = false;
   @Input() discardSkippedResolvers = true;
+
+  isResolved: boolean;
+  isResolvedSuccessfully: boolean;
+  isLoading: boolean;
+  isErrored: boolean;
 
   constructor(
     @Inject(HG_RESOLVERS) @Optional() resolvers: Resolver<any>[] = [],
@@ -28,6 +33,14 @@ export class ResolveDirective extends ResolverBase implements OnInit, OnDestroy 
 
   ngOnInit() {
     if (this.resolveOnInit) { this.resolve(); }
+  }
+
+  ngDoCheck() {
+    const state = this.calculateState();
+    this.isResolved = state.isResolved;
+    this.isResolvedSuccessfully = state.isResolvedSuccessfully;
+    this.isErrored = state.isErrored;
+    this.isLoading = state.isLoading;
   }
 
   ngOnDestroy() {

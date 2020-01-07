@@ -33,26 +33,27 @@ export class ResolverBase {
     }
   }
 
-  get isResolved() {
-    return this.resolvers.reduce((acc, res) =>
-      acc && (this.discardSkippedResolvers ? (res.shouldSkip || res.isResolved) : res.isResolved), true
-    );
-  }
+  calculateState() {
+    return this.resolvers.reduce((acc, res) => {
+      acc.isErrored = acc.isErrored &&
+        (this.discardSkippedResolvers ? (res.shouldSkip || res.isResolved) : res.isResolved);
 
-  get isResolvedSuccessfully() {
-    return this.resolvers.reduce((acc, res) =>
-      acc && (this.discardSkippedResolvers ? (res.shouldSkip || res.isResolvedSuccessfully) : res.isResolvedSuccessfully), true
-    );
-  }
+      acc.isResolvedSuccessfully = acc.isResolvedSuccessfully &&
+        (this.discardSkippedResolvers ? (res.shouldSkip || res.isResolvedSuccessfully) : res.isResolvedSuccessfully);
 
-  get isLoading() {
-    return this.resolvers.reduce((acc, res) =>
-      acc && (this.discardSkippedResolvers ? (res.shouldSkip || res.isLoading) : res.isLoading), true
-    );
-  }
+      acc.isLoading = acc.isLoading &&
+        (this.discardSkippedResolvers ? (res.shouldSkip || res.isLoading) : res.isLoading);
 
-  get isErrored() {
-    return this.resolvers.reduce((acc, res) => acc && res.isErrored, true);
+      acc.isErrored = acc.isErrored &&
+        (this.discardSkippedResolvers ? (res.shouldSkip || res.isErrored) : res.isErrored);
+
+      return acc;
+    }, {
+      isResolved: true,
+      isResolvedSuccessfully: true,
+      isLoading: true,
+      isErrored: true
+    });
   }
 
   protected destroy() {
