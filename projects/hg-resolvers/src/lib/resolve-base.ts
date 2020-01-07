@@ -22,15 +22,7 @@ export class ResolverBase {
   attachResolver(resolver: Resolver<any>) {
     resolver.__parentRenderId = this.uniqueId;
     this.resolvers = this.resolvers.concat(resolver);
-    if ((resolver as any).isFunctionObservableTarget) {
-      this.isFunctionObservableTargetDirectivesCount++;
-    }
-
-    asapScheduler.schedule(() => {
-      if (!resolver.isResolved && !resolver.shouldSkip) {
-        resolver.resolve();
-      }
-    });
+    if ((resolver as any).isFunctionObservableTarget) { this.isFunctionObservableTargetDirectivesCount++; }
   }
 
   detachResolver(resolver: Resolver<any>) {
