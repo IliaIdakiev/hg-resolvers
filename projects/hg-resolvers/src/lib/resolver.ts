@@ -208,6 +208,10 @@ export class Resolver<T, D = any> {
     delegate.pipe(filter(e => e.type === 'success'), takeUntil(this._isAlive$)).subscribe(e => {
       this._state.loading = false;
       this._state.errored = false;
+
+      (this as any).isResolved = true;
+      (this as any).isResolvedSuccessfully = true;
+
       if (this.isFunctionObservableTarget) {
         this._data = e.data;
         this._data$.next(e.data);
@@ -217,6 +221,10 @@ export class Resolver<T, D = any> {
     delegate.pipe(filter(e => e.type === 'failure'), takeUntil(this._isAlive$)).subscribe(e => {
       this._state.loading = false;
       this._state.errored = true;
+
+      (this as any).isResolved = true;
+      (this as any).isResolvedSuccessfully = false;
+
       if (this.isFunctionObservableTarget) {
         this._error = e.data;
         this._error$.next(e.data);
@@ -248,6 +256,9 @@ export class Resolver<T, D = any> {
     const uniqueId = this._uniqueId;
     const resolverIdRecordEntry = this.getResolverEntry();
 
+    (this as any).isResolved = false;
+    (this as any).isResolvedSuccessfully = false;
+
     if (
       resolverIdRecordEntry && (resolverIdRecordEntry.requested || resolverIdRecordEntry.resolved) ||
       (auto && this._autoResolveOnceCompleted)
@@ -262,8 +273,6 @@ export class Resolver<T, D = any> {
       resolverIdRecordEntry.requested = true;
       resolverIdRecordEntry.resolved = false;
     }
-    (this as any).isResolved = false;
-    (this as any).isResolvedSuccessfully = false;
 
     if (this._dependencySubscription) { this._dependencySubscription.unsubscribe(); }
     const isAutoResolveOnceConfig = this.config === ResolverConfig.AutoResolveOnce;
@@ -294,6 +303,7 @@ export class Resolver<T, D = any> {
 
             (this as any).isResolved = true;
             (this as any).isResolvedSuccessfully = true;
+
             if (resolverDelegate) {
               resolverDelegate.next({ type: 'success', data: null });
               resolverIdRecordEntry.resolved = true;
@@ -305,6 +315,7 @@ export class Resolver<T, D = any> {
 
             (this as any).isResolved = true;
             (this as any).isResolvedSuccessfully = false;
+
             if (resolverDelegate) {
               resolverDelegate.next({ type: 'failure', data: null });
               resolverIdRecordEntry.resolved = true;
@@ -320,8 +331,10 @@ export class Resolver<T, D = any> {
             next: res => {
               this._data = res;
               this._data$.next(res);
+
               (this as any).isResolved = true;
               (this as any).isResolvedSuccessfully = true;
+
               if (resolverDelegate) {
                 resolverDelegate.next({ type: 'success', data: res });
                 resolverIdRecordEntry.resolved = true;
@@ -332,8 +345,10 @@ export class Resolver<T, D = any> {
             error: err => {
               this._error = err;
               this._error$.next(err);
+
               (this as any).isResolved = true;
               (this as any).isResolvedSuccessfully = false;
+
               if (resolverDelegate) {
                 resolverDelegate.next({ type: 'failure', data: err });
                 resolverIdRecordEntry.resolved = true;
