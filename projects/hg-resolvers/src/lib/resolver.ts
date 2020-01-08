@@ -92,6 +92,7 @@ export class Resolver<T, D = any> {
 
   public readonly isResolved = false;
   public readonly isResolvedSuccessfully = false;
+  public resolveOnInit = false;
 
   get isLoading() { return this._state.loading; }
 
@@ -433,7 +434,10 @@ export class Resolver<T, D = any> {
   // tslint:disable-next-line:use-lifecycle-interface
   ngOnInit() {
     asapScheduler.schedule(() => {
-      if (this.parentContainer && this.parentContainer.resolveOnInit && this.config === ResolverConfig.Default) { return; }
+      if (
+        (this.parentContainer && this.parentContainer.resolveOnInit && this.config === ResolverConfig.Default) ||
+        this.resolveOnInit && this.config === ResolverConfig.Default
+      ) { return; }
       this._process();
     });
   }
