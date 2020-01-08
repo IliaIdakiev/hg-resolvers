@@ -80,12 +80,12 @@ export class ResolverBase {
   calculateState() {
     return this.resolvers.reduce((acc, res) => {
       const isResolved = acc.isResolved &&
-        (this.discardSkippedResolvers ? (res.shouldSkip ? false : res.isResolved) : res.isResolved);
+        (this.discardSkippedResolvers ? (res.shouldSkip ? true : res.isResolved) : res.isResolved);
 
       const isResolvedSuccessfully = acc.isResolvedSuccessfully &&
-        (this.discardSkippedResolvers ? (res.shouldSkip ? false : res.isResolvedSuccessfully) : res.isResolvedSuccessfully);
+        (this.discardSkippedResolvers ? (res.shouldSkip ? true : res.isResolvedSuccessfully) : res.isResolvedSuccessfully);
 
-      const isLoading = acc.isLoading &&
+      const isLoading = acc.isLoading ||
         (this.discardSkippedResolvers ? (res.shouldSkip ? false : res.isLoading) : res.isLoading);
 
       const isErrored = acc.isErrored ||
@@ -95,7 +95,7 @@ export class ResolverBase {
     }, {
       isResolved: true,
       isResolvedSuccessfully: true,
-      isLoading: true,
+      isLoading: false,
       isErrored: false
     });
   }
