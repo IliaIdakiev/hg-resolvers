@@ -1,5 +1,5 @@
-import { Directive, Inject, Optional, OnDestroy, TemplateRef, ViewContainerRef, Input } from '@angular/core';
-import { Subject, asapScheduler } from 'rxjs';
+import { Directive, Inject, Optional, TemplateRef, ViewContainerRef, Input } from '@angular/core';
+import { Subject } from 'rxjs';
 import { Resolver } from './resolver';
 import { ResolverBase } from './resolve-base';
 import { HG_RESOLVERS } from './injection-tokens';

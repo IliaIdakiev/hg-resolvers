@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, Inject, TemplateRef, Optional, OnInit, DoCheck, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Inject, TemplateRef, Optional } from '@angular/core';
 import { Subject } from 'rxjs';
 import { Resolver } from '../resolver';
 import { ResolverBase } from '../resolve-base';
@@ -23,7 +23,7 @@ export class ResolveComponent extends ResolverBase {
   @Input() hideContentUntilResolvedSuccessfully = true;
   @Input() discardSkippedResolvers = true;
 
-  constructor(@Inject(HG_RESOLVERS) @Optional() resolvers: Resolver<any>[] = [], private cd: ChangeDetectorRef) {
+  constructor(@Inject(HG_RESOLVERS) @Optional() resolvers: Resolver<any>[] = []) {
     super(resolvers);
     (resolvers || []).forEach(r => (r as any).parentContainer = this);
     this.refresh$.subscribe(() => { this.resolve(); });
