@@ -1,13 +1,57 @@
 import { Resolver, ResolverConfig } from './resolver';
-import { asapScheduler } from 'rxjs';
+import { asapScheduler, Subject } from 'rxjs';
 
 const ids = [];
 
 export class ResolverBase {
 
+  refresh$: Subject<void> = new Subject();
+
   uniqueId: symbol;
   isFunctionObservableTargetDirectivesCount = 0;
   discardSkippedResolvers = true;
+
+  resolveOnInit = false;
+  isResolved = false;
+  isResolvedSuccessfully = false;
+  isLoading = false;
+  isErrored = false;
+  // tslint:disable-next-line:variable-name
+  private _autoTriggeredCD = false;
+
+  // tslint:disable-next-line:use-lifecycle-interface
+  ngDoCheck() {
+    if (this._autoTriggeredCD) { return; }
+    // TODO: probably there is a way to optimize this so its not calculated on every cd run
+    const { isResolvedSuccessfully, isResolved, isErrored, isLoading } = this.calculateState();
+    if (
+      isResolved !== this.isResolved ||
+      isResolvedSuccessfully !== this.isResolvedSuccessfully ||
+      isErrored !== this.isErrored ||
+      isLoading !== this.isLoading
+    ) {
+      this._autoTriggeredCD = true;
+      asapScheduler.schedule(() => {
+        this.isResolved = isResolved;
+        this.isResolvedSuccessfully = isResolvedSuccessfully;
+        this.isErrored = isErrored;
+        this.isLoading = isLoading;
+
+        this._autoTriggeredCD = false;
+      });
+    }
+  }
+
+  // tslint:disable-next-line:use-lifecycle-interface
+  ngOnInit() {
+    if (this.resolveOnInit) { this.resolve(); }
+  }
+
+  // tslint:disable-next-line:use-lifecycle-interface
+  ngOnDestroy() {
+    this.refresh$.complete();
+    this.destroy();
+  }
 
   constructor(protected resolvers: Resolver<any>[] = []) {
     this.uniqueId = Symbol('Unique Async Render');
@@ -35,26 +79,27 @@ export class ResolverBase {
 
   calculateState() {
     return this.resolvers.reduce((acc, res) => {
-      acc.isErrored = acc.isErrored &&
-        (this.discardSkippedResolvers ? (res.shouldSkip || res.isResolved) : res.isResolved);
+      const isResolved = acc.isResolved &&
+        (this.discardSkippedResolvers ? (res.shouldSkip ? false : res.isResolved) : res.isResolved);
 
-      acc.isResolvedSuccessfully = acc.isResolvedSuccessfully &&
-        (this.discardSkippedResolvers ? (res.shouldSkip || res.isResolvedSuccessfully) : res.isResolvedSuccessfully);
+      const isResolvedSuccessfully = acc.isResolvedSuccessfully &&
+        (this.discardSkippedResolvers ? (res.shouldSkip ? false : res.isResolvedSuccessfully) : res.isResolvedSuccessfully);
 
-      acc.isLoading = acc.isLoading &&
-        (this.discardSkippedResolvers ? (res.shouldSkip || res.isLoading) : res.isLoading);
+      const isLoading = acc.isLoading &&
+        (this.discardSkippedResolvers ? (res.shouldSkip ? false : res.isLoading) : res.isLoading);
 
-      acc.isErrored = acc.isErrored &&
-        (this.discardSkippedResolvers ? (res.shouldSkip || res.isErrored) : res.isErrored);
+      const isErrored = acc.isErrored ||
+        (this.discardSkippedResolvers ? (res.shouldSkip ? false : res.isErrored) : res.isErrored);
 
-      return acc;
+      return { isResolved, isResolvedSuccessfully, isLoading, isErrored };
     }, {
       isResolved: true,
       isResolvedSuccessfully: true,
       isLoading: true,
-      isErrored: true
+      isErrored: false
     });
   }
+
 
   protected destroy() {
     this.resolvers.forEach(res => res.destroy());
