@@ -1,0 +1,19 @@
+<h2>3. Container with multiple resolvers</h2>
+<div style="font-style: italic;">(Note: UserService loadUsers and PostServie loadPosts have a delay operator applied!
+  Also if you go to the user
+  service you can uncomment to throwError line in order to view how the error will be displayed)</div>
+<ng-template #loader let-showLoading>
+  <div>Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div>{{errors}}</div>
+</ng-template>
+
+<hg-resolve appUserListResolver [resolveOnInit]="true" appPostListResolver #userListResolver="appUserListResolver"
+  #postListResolver="appPostListResolver" [loaderTemplateRef]="loader" [errorTemplateRef]="error"
+  [autoControlLoader]="true" [autoControlError]="true">
+  <h2>Users</h2>
+  {{userListResolver.data$ | async | json}}
+  <h2>Posts</h2>
+  {{postListResolver.data$ | async | json }}
+</hg-resolve>

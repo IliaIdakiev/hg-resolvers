@@ -1,0 +1,42 @@
+<h3>5. Dynamically Attaching Duplicate Resolvers (with unique ids)</h3>
+<h4>You can use this for attaching directives to the resolve container dynamically (when using ngIf / ngSwitch /
+  ngFor). In the current case we don't need to duplicate the userPostsResolver because we can just reuse the template
+  reference variavble into multiple places but this is very useful if you have multiple places where you use the same
+  resolver and they can be conditionally visible. In that case we can't be sure which resolver will pre visible so the
+  first one visible will be the main one and all the others (that might get visible later) will be connected to the main
+  one.</h4>
+<ng-template #loader let-showLoading>
+  <div *ngIf="showLoading">Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div *ngIf="isErrored">{{errors}}</div>
+</ng-template>
+
+<button (click)="resolve.refresh$.next()">Re-Fetch All</button>
+<input type="number" #idInput><button (click)="selectedUserId = idInput.value">Select</button>
+Don't forget to set AutoResolve on userPostsResolver because otherwise you have to call it explicitly
+<hg-resolve #resolve="hgResolve" appUserListResolver #userListResolver="appUserListResolver"
+  [loaderTemplateRef]="loader" [errorTemplateRef]="error" [resolveOnInit]="true">
+  <h2>Users</h2>
+  {{userListResolver.data$ | async | json}}
+
+  <p>You can use hgResolveAttach for attaching directives dynamically based on ngIf / ngSwitch / ngFor</p>
+  <p>By using autoUniqueId = true you "connect" multiple directives of the same type so only one call is dispatched</p>
+
+  <ng-container hgResolveAttach [appUserPostsResolver]="!selectedUserId" [selectedUserId]="selectedUserId"
+    #userPostsResolver="appUserPostsResolver">
+    <ng-container *ngIf="userPostsResolver.data$ | async as userPosts">
+      <h2>User Posts Count</h2>
+      {{userPosts.length}}
+    </ng-container>
+  </ng-container>
+
+  <ng-container hgResolveAttach [appUserPostsResolver]="!selectedUserId" [selectedUserId]="selectedUserId"
+    #userPostsResolver="appUserPostsResolver">
+    <ng-container *ngIf="userPostsResolver.data$ | async as userPosts">
+      <h2>User Posts</h2>
+      {{userPosts | json }}
+    </ng-container>
+    <button (click)="userPostsResolver.resolve()">Reload</button>
+  </ng-container>
+</hg-resolve>

@@ -1,0 +1,27 @@
+<h3>4. Container With Multiple Resolvers and Dependencies (Skipping Resolvers)</h3>
+<div>In this scenario we have a user list resolver and a user post resolver. The user posts resolver is skipped until we
+  select a valid userId value. Whenever the userId value is set the user posts resolver will auto resolve (auto load the
+  data) but that won't
+  trigger a user list resolve (For more info look into the user-posts resolver file)</div>
+<div style="font-style: italic;">(Note: UserService loadUsers and PostServie loadPosts have a delay operator applied!
+  Also if you go to the user
+  service you can uncomment to throwError line in order to view how the error will be displayed)</div>
+<ng-template #loader let-showLoading>
+  <div *ngIf="showLoading">Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div *ngIf="isErrored">{{errors}}</div>
+</ng-template>
+
+<button (click)="resolve.refresh$.next()">Re-Fetch All</button>
+User Id:<input type="number" #idInput><button (click)="selectedUserId = idInput.value">Select</button>
+<hg-resolve #resolve="hgResolve" [resolveOnInit]="true" appUserListResolver [appUserPostsResolver]="!selectedUserId"
+  [selectedUserId]="selectedUserId" #userListResolver="appUserListResolver" #userPostsResolver="appUserPostsResolver"
+  [loaderTemplateRef]="loader" [errorTemplateRef]="error" [resolveOnInit]="true">
+  <h2>Users</h2>
+  {{userListResolver.data$ | async | json}}
+  <ng-container *ngIf="userPostsResolver.data$ | async as userPosts">
+    <h2>User Posts</h2>
+    {{userPosts | json }}
+  </ng-container>
+</hg-resolve>

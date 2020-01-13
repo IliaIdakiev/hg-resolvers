@@ -1,0 +1,27 @@
+<h3>6. Attaching Resolvers</h3>
+<h4>You can use this for attaching directives to the resolve container dynamically (when using ngIf / ngSwitch /
+  ngFor)</h4>
+<ng-template #loader let-showLoading>
+  <div *ngIf="showLoading">Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div *ngIf="isErrored">{{errors}}</div>
+</ng-template>
+
+<button (click)="resolve.refresh$.next()">Re-Fetch All</button>
+<input type="number" #idInput><button (click)="selectedUserId = idInput.value">Select</button>
+<hg-resolve #resolve="hgResolve" appUserListResolver #userListResolver="appUserListResolver"
+  [loaderTemplateRef]="loader" [errorTemplateRef]="error" [resolveOnInit]="true">
+  <h2>Users</h2>
+  {{userListResolver.data$ | async | json}}
+
+
+
+  <ng-container hgResolveAttach [appUserPostsResolver]="!selectedUserId" [selectedUserId]="selectedUserId"
+    #userPostsResolver="appUserPostsResolver">
+    <ng-container *ngIf="userPostsResolver.data$ | async as userPosts">
+      <h2>User Posts</h2>
+      {{userPosts | json }}
+    </ng-container>
+  </ng-container>
+</hg-resolve>

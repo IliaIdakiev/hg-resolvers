@@ -1,0 +1,22 @@
+<h1>2. Single Resolver with Resolve Contauner</h1>
+<div>Here we are using a single directive that inherits Resolver on a resolve contauner. In this case when we need to
+  use multi provides to provide our directive and we need the HGResolversModule so we can use the resolve container. The
+  container can accept a template for the loader and a template for the error in this case we are controlling when to
+  show and hide them but the resolve component container can automatically show and hide them by binding
+  [autoControlError]="true" and [autoControlLoader]="true"
+</div>
+<div style="font-style: italic;">(Note: UserService loadUsers has a delay operator applied! Also if you go to the user
+  service you can uncomment to throwError line in order to view how the error will be displayed)</div>
+<button (click)="resolve.resolve()">Load/Reload</button>
+<h2>2. Container with single resolver</h2>
+<ng-template #loader let-showLoading>
+  <div *ngIf="showLoading">Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div *ngIf="isErrored">{{errors}}</div>
+</ng-template>
+
+<hg-resolve appUserListResolver #resolve="hgResolve" [resolveOnInit]="true" #userListResolver="appUserListResolver"
+  [loaderTemplateRef]="loader" [errorTemplateRef]="error">
+  {{userListResolver.data$ | async | json}}
+</hg-resolve>

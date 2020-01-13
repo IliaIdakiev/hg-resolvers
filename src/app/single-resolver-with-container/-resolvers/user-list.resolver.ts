@@ -1,9 +1,10 @@
 import { Directive } from '@angular/core';
 import { Resolver, HG_RESOLVERS } from 'hg-resolvers';
-import { UserService } from '../user.service';
+import { UserService } from '../../user.service';
 
 @Directive({
   selector: '[appUserListResolver]',
+  // We need to add multi provide the directive so it can get registered on the resolve contauner
   providers: [
     {
       provide: HG_RESOLVERS,
@@ -14,7 +15,8 @@ import { UserService } from '../user.service';
   exportAs: 'appUserListResolver'
 }) export class UserListResolverDirective extends Resolver<any[]> {
 
-  resolveOnInit = true;
+  // We don't need this anymore since the resolve container will control the resovler
+  // resolveOnInit = true;
 
   constructor(userService: UserService) {
     super(() => userService.loadUsers());

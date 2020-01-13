@@ -5,8 +5,8 @@
   <div *ngIf="userListResolver.isResolvedSuccessfully">{{userListResolver.data$ | async | json }}
   </div>
   <div *ngIf="userListResolver.isErrored">Error {{userListResolver.error}}</div>
-</div> -->
-
+</div>
+ -->
 
 
 <!-- <h2>2. Container with single resolver</h2>
@@ -152,7 +152,7 @@ Don't forget to set AutoResolve on userPostsResolver because otherwise you have 
 </hg-resolve>
 -->
 
-<h3>7. Making things pretty </h3>
+<!-- <h3>7. Making things pretty </h3>
 <ng-template #error let-isErrored let-errors="errors">
   <div *ngIf="errors[0]" style="color: red;">Error loading users!</div>
 </ng-template>
@@ -202,4 +202,4 @@ Don't forget to set AutoResolve on userPostsResolver because otherwise you have 
       <button (click)="userPostsResolver.resolve()">Reload</button>
     </ng-container>
   </ng-container>
-</hg-resolve>
+</hg-resolve> -->
