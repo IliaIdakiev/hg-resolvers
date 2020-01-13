@@ -1,6 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
-// import { UserListModel } from './+store/models/list';
-// import { SimpleUserListAsyncResolverDirective } from './-resolvers/simple-user-list';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -8,11 +6,5 @@ import { Component, ViewChild } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  // users$ = this.userListModel.users$;
-  // posts$ = this.userListModel.posts$;
-  // post$ = this.userListModel.post$;
-  // skip = true;
-
-  // constructor(private userListModel: UserListModel) { }
-
+  title = 'hg-resolvers-demo';
 }

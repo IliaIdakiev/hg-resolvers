@@ -3,24 +3,28 @@ import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { UserListComponent } from './user-list/user-list.component';
+import { HGResolversModule } from 'hg-resolvers';
 import { HttpClientModule } from '@angular/common/http';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HomeComponent } from './home/home.component';
-import { CoreModule } from './core/core.module';
-import { SharedModule } from './shared/shared.module';
+import { UserListResolverDirective } from './-resolvers/user-list.resolver';
+import { PostListResolverDirective } from './-resolvers/post-list.resolver';
+import { UserPostsResolverDirective } from './-resolvers/user-posts.resolver';
+import { AboutComponent } from './about/about.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
+    UserListComponent,
+    UserListResolverDirective,
+    PostListResolverDirective,
+    UserPostsResolverDirective,
+    AboutComponent
   ],
   imports: [
-    CoreModule,
-    SharedModule,
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    BrowserAnimationsModule
+    HGResolversModule
   ],
   providers: [],
   bootstrap: [AppComponent]

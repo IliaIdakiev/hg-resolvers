@@ -1,209 +1,348 @@
 # HG Resolvers
 
-Are you sick of the navigation blocking Angular resolvers. No problem... just use the hg-resolve component/directive for the different parts of you app that need to be rendered 
-and create resolver directives that you can attach to the inidvidual resolve components. You can also provide your cool loader to be visualized while loading
-the data or you can use the exported hg resolve component/directive (using `hgResolver`) with a template variable to be able to get access to the `isLoading` variable. You can also trigger a refresh on all of the resolvers by using the `refresh$.next()` subject method or trigger a individual resolve by querying the directive with ViewChild and calling the `resolve()` method. You can also configure the resolvers to resolve automatically on stream emissions. For more info check out the [app](https://stackblitz.com/github/IliaIdakiev/hg-resolve) or look bellow. Happy coding!
+Are you sick of the navigation blocking Angular resolvers. No problem... just use the hg-resolve component or directive for the different parts inside your component templates that need to be load and present some data and create resolver directives that you can attach to the inidvidual resolve components. You can also provide your cool loader to be visualized while loading
+the data or you can use the exported hg resolve component/directive (using `hgResolver`) with a template variable to be able to get access to the `isResolvedSuccessfully` variable. You can also trigger a refresh on all of the resolvers by using the `resolve` method or `refresh$.next()` subject on the resolve component/directive or trigger a individual resolve by querying the directive with ViewChild and calling the `resolve()` method inside the template. You can also configure the resolvers to resolve automatically on stream emissions. For more info check out the [app](https://stackblitz.com/github/IliaIdakiev/hg-resolve) or look bellow. Happy coding!
+
+*NOTE: You can check the `src` folder of this repo for a more detailed explanation but the usage is as follows:*
+
+## Video Presentation
+
+[![Video image](https://img.youtube.com/vi/zZD-5Blf3B4/0.jpg)](https://youtu.be/zZD-5Blf3B4)
 
 ## Installation
-`yarn add hg-resolvers` || `npm i hg-resolvers`
+`yarn add hg-resolvers` or `npm i hg-resolvers`
 
-## Usage
-You can check the `src` folder of this repo for a more detailed explanation but the usage is as follows:
+### 1. Simple Usage (Single resolve directive with no parent container)
 
-### 1. Configiration (import the HGResolversModule to your module) 
+Here we are asumming you have a userService loadUsers method that fetches an endpoint that returns an array of user objects
 
-```typescript
-import { HGResolversModule } from 'hg-resolvers';
-
-@NgModule({
-  declarations: [
-    // your declarations...
-  ],
-  imports: [
-    // your imports...
-    HGResolversModule,
-  ],
-  providers: [
-    // your providers...
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-```
-
-### 2. Create your first action based resolver (alternatively you can create a regular resolver with a function call that returns an observable - [view here](https://github.com/IliaIdakiev/hg-resolvers#3-regular-resolver))
-
-```typescript
+*user-list.resolver.ts*
+```typescript 
 import { Directive } from '@angular/core';
-import { Resolver, HG_RESOLVERS } from 'hg-resolvers';
+import { Resolver } from 'hg-resolvers';
+import { UserService } from '../user.service';
 
 @Directive({
   selector: '[appUserListResolver]',
-  providers: [
-    {
-      provide: HG_RESOLVERS, // use this injector token
-      useExisting: UserListResolverDirective, // use the name of your directive
-      multi: true // use milti providers
-    }
-  ]
-})
-export class UserListResolverDirective extends Resolver {
-  constructor(service: YourService) {
-    super({
-      loadAction: service.loadUsers, // the method that dispatches the load action or sends the actual load request
-      cancelAction: service.cancelLoadUsers, // the method that dispatches the cancel load request or does the actual request cancellation
-      success$: service.userLoadSuccess$, // a RxJS stream that emits when the data is loaded successfuly
-      failure$: service.userLoadFailure$ // a RxJS stream that emits when the data fails to load
-    });
+  exportAs: 'appUserListResolver'
+}) export class UserListResolverDirective extends Resolver<any[]> {
+
+  constructor(userService: UserService) {
+    super(() => userService.loadUsers());
   }
 }
-
 ```
 
-### 3. Use the hg resolve component and the resolver from step.2 (you can also use [hgResolve] directive - [look here](https://github.com/IliaIdakiev/hg-resolvers#1-use-the-resolve-directive-to-skip-the-additional-element-added-and-use-a-custom-loader))
+*some.component.html*
 ```html
-<!-- If you want you can create a loader template that will be used while loading -->
-<ng-template #loader let-isLoading>
-  <app-loader loaderSize="small" [visible]="isLoading" [localLoader]="true"></app-loader>
-</ng-template>
-<div>  
-  <!-- Or you can use the userListResolve template variable to manually show hide a loader or a unicorn -->
-  <div>UserListIsLoading: {{userListResolve.isLoading}}</div>
-  <!-- You can use the refresh$.next() to trigger a reload if necessary -->
-  <button (click)="userListResolve.refresh$.next()">Reload Users</button>
-  <!-- Use the hg-resolve component and feed it with our shiny loader. Alos put the appUserListResolver directive that we've created in task 2 (don't forget to put it inside the declarations array inside your module before using it). If you need multiple resolvers for the current resolve container just put all the directives on the opening tag -->
-  <hg-resolve [loaderTemplateRef]="loader" #userListResolve="hgResolve" appUserListResolver>
-    <h1>User List</h1>
-    <ul>
-      <li *ngFor="let user of users$ | async"> {{ user.email }}</li>
-    </ul>
-  </hg-resolve>
+<button (click)="userListResolver.resolve()">Load/Reload</button>
+<div appUserListResolver #userListResolver="appUserListResolver">
+  <div *ngIf="!userListResolver.isResolved">Loading</div>
+  <div *ngIf="userListResolver.isResolvedSuccessfully">{{userListResolver.data$ | async | json }}
+  </div>
+  <div *ngIf="userListResolver.isErrored">Error {{userListResolver.error}}</div>
 </div>
 ```
 
-Resolve Component Inputs:
-```typescript
-@Input() loaderTemplateRef: TemplateRef<any>; // the template that will be used for the loader
-@Input() errorTemplateRef: TemplateRef<any>; // the template that will be used for the error
-@Input() autoHideLoader = false; // auto hide the loader template on loading
-@Input() autoShowError = false; // auth show the error template on error
-```
+Here we depend on clicking the button for the resolver to fetch the data and present it. But we can also extend our directive with a property `resolveOnInit = true;` that will trigger a resolve on init.
 
-### [4. DEMO](https://stackblitz.com/github/IliaIdakiev/hg-resolvers)
+*NOTE: resolveOnInit only works when we don't have a resolve container (see the example bellow this one) and with ResolverConfig.Default (check out resolve config info if you don't understand this)*
 
-## More Congifirations
-
-### 1. Use the resolve directive to skip the additional element added and use a custom loader
-```html
-<div>UserPostDepIsLoading (Directive): {{hgResolve.isLoading}}</div>
-<button (click)="hgResolve.refresh$.next()">Reload User Post</button>
-<ng-template hgResolve #hgResolve="hgResolve" appUserPostDepResolver>
-  <h1>Post</h1>
-  {{ post$ | async | json }}
-</ng-template>
-```
-⚠️**Since the directive is rendering the template there is no loaderTemplateRef binding. But it's not actually needed since you can just put the loader itself info the template and use the template varialbe to access the state**
-
-### 2. You can also additionally configure the resolvers
-
-```typescript
+*user-list.resolver.ts*
+```typescript 
 import { Directive } from '@angular/core';
-import { Resolver, HG_RESOLVERS, ResolverConfig } from 'hg-resolvers';
+import { Resolver } from 'hg-resolvers';
+import { UserService } from '../user.service';
 
 @Directive({
   selector: '[appUserListResolver]',
-  providers: [
-    {
-      provide: HG_RESOLVERS, // use this injector token
-      useExisting: UserListResolverDirective, // use the name of your directive
-      multi: true // use milti providers
-    }
-  ]
-})
-export class UserListResolverDirective extends Resolver {
-  // tslint:disable-next-line:no-input-rename
-  @Input('appUserListResolverDirective') shouldSkip: boolean;
-  // set the attribute binding appUserListResolverDirective ([appUserListResolverDirective]="true") 
-  // to the local shouldSkip property (writing it this way is faster and with less code)
-  
+  exportAs: 'appUserListResolver'
+}) export class UserListResolverDirective extends Resolver<any[]> {
 
-  config: ResolverConfig = ResolverConfig.AutoResolve; 
-  // ResolverConfig.Default - don't auto resolve when skip or a depenency changes/emits.
+  resolveOnInit = true;
 
-  // ResolverConfig.AutoResolve - auto resolve when skip or a depenency changes/emits.
-
-  // ResolverConfig.AutoResolveOnce - auto resolve once when skip or a depenency changes/emits (look at the scenarios bellow).
-  // 
-  // ⚠️Scenarios for ResolverConfig.AutoResolveOnce:
-  // 1. if shouldSkip = true
-  //    the resolver will be skiped until the shouldSkip is set to false. When that happens a resolve will be triggered
-  // 2. if shouldSkip = false
-  //    the resolver will dispatch the resolve call and there won't be any auto resolves triggered 
-  //    (the only way to dispatch a resolve is via refresh$.next())
-
-  constructor(service: YourService) {
-    super(
-      {
-        loadAction: ([dependecyStreamData1, dependecyStreamData2, dependecyStreamData3]) => service.loadSomething(dependecyStreamData1, dependecyStreamData2, dependecyStreamData3), // the method that dispatches the load action or sends the actual load request
-        cancelAction: service.cancelLoadUsers, // the method that dispatches the cancel load request or does the actual request cancellation
-        success$: service.userLoadSuccess$, // a RxJS stream that emits when the data is loaded successfuly
-        failure$: service.userLoadFailure$ // a RxJS stream that emits when the data fails to load
-      },
-    [dependecyStream1$, dependecyStream2$, dependecyStream3$] // a RxJS observable or array of observables that we depend on (the stream values can be used inside the load function (the first argument of the super call))
-    );
+  constructor(userService: UserService) {
+    super(() => userService.loadUsers());
   }
 }
-
 ```
 
-### 3. Regular Resolver
+### 2. Using a resolve container
 
-```typescript
-import { Directive, Input } from '@angular/core';
-import { Resolver, HG_RESOLVERS } from 'hg-resolvers';
-import { HttpClient } from '@angular/common/http';
+Because we want to use our resolver with a contaner we will have to multi-provide (something that we do when we create template driven form validation directives)
+
+*user-list.resolver.ts*
+```typescript 
+import { Directive } from '@angular/core';
+import { Resolver } from 'hg-resolvers';
+import { UserService } from '../user.service';
 
 @Directive({
-  selector: '[appSimpleUserListResolver]',
+  selector: '[appUserListResolver]',
+  exportAs: 'appUserListResolver',
+  // we need to add this:
   providers: [
     {
       provide: HG_RESOLVERS,
-      useExisting: SimpleUserListResolverDirective,
+      useExisting: UserListResolverDirective,
       multi: true
     }
-  ],
-  exportAs: 'appSimpleUserListResolver' 
-  // since we want to be able to access the directive trough 
-  // a template variable we have to export it. (insde the 
-  // html we will have #resolver="appSimpleUserListResolver")
-})
-export class SimpleUserListResolverDirective extends Resolver {
+  ]
+}) export class UserListResolverDirective extends Resolver<any[]> {
 
-  // transfer the appSimpleUserListResolver input into shouldSkip to skip the current resolver
+  // resolveOnInit = true; we have to remove this since the resolver will be controled by the resolve container
 
-  // tslint:disable-next-line:no-input-rename
-  @Input('appSimpleUserListResolver') shouldSkip;
-
-  constructor(http: HttpClient) {
-    // the function that we provide to super would usually be a user serice load method
-    super(() => http.get('https://jsonplaceholder.typicode.com/users')); 
+  constructor(userService: UserService) {
+    super(() => userService.loadUsers());
   }
 }
 ```
-**The result can be accessed via the data$ property on the resolver directive. You can either use ViewChild to get the directive and access the data$ property or by using a template variable like:**
 
-```html
-<ng-template hgResolve #simpleUserListResolve="hgResolve"
-      [appSimpleUserListResolver]="false" #resolver="appSimpleUserListResolver">
-  <h1>User List</h1>
-  <ul>
-    <li *ngFor="let user of (resolver.data$ | async)"> {{ user.email }}</li>
-  </ul>
-</ng-template>
+*NOTE: Here we also use the ability to provide a template for while resolving and for when an error occurs*
+
+and we will also need to add the `HGResolversModule` to the module that our directives are provided (in our case this will be the app module)
+
+```typescript
+@NgModule({
+  declarations: [
+    AppComponent,
+    UserListComponent,
+    UserListResolverDirective // we also need to provide our directives as usual
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    HttpClientModule,
+    HGResolversModule // we need to add this line
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
 ```
 
-### 4. Error Handling
+*some.component.html*
+```html
+<ng-template #loader let-showLoading>
+  <div *ngIf="showLoading">Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div *ngIf="isErrored">{{errors}}</div>
+</ng-template>
 
-Each resolver has an error property that will contain the error if one exists. You can use this property inside your templates via template reference variable containing the resolver instance (just like the one with name `resolver` from the code above section 4) to present the error message/code to the user.
+<hg-resolve appUserListResolver #userListResolver="appUserListResolver"
+  [loaderTemplateRef]="loader" [errorTemplateRef]="error">
+  {{userListResolver.data$ | async | json}}
+</hg-resolve>
+```
+
+This code won't trigger a resolve on init so if we want that we will have to add the `[resolveOnInit]="true"` to the resolve contaner.
+
+*some.component.html*
+```html
+<ng-template #loader let-showLoading>
+  <div *ngIf="showLoading">Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div *ngIf="isErrored">{{errors}}</div>
+</ng-template>
+
+<hg-resolve [resolveOnInit]="true" appUserListResolver #userListResolver="appUserListResolver"
+  [loaderTemplateRef]="loader" [errorTemplateRef]="error">
+  {{userListResolver.data$ | async | json}}
+</hg-resolve>
+```
+
+### 3. Adding more resolvers to our container
+
+Sometimes we want to be able to resolve multiple things. So lets suppose that we have a similar resolver directive like the `UserListResolverDirective` one called `PostsListResolverDirective`
+
+*some.component.html*
+```html
+<ng-template #loader let-showLoading>
+  <div *ngIf="showLoading">Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div *ngIf="isErrored">{{errors}}</div>
+</ng-template>
+
+<hg-resolve appUserListResolver appPostListResolver #userListResolver="appUserListResolver"
+  #postListResolver="appPostListResolver" [loaderTemplateRef]="loader" [errorTemplateRef]="error">
+  <h2>Users</h2>
+  {{userListResolver.data$ | async | json}}
+  <h2>Posts</h2>
+  {{postListResolver.data$ | async | json }}
+</hg-resolve>
+```
+
+### 4. Adding a resolver with dependencies
+
+Sometimes we want to be able to resolve something depending on a value. If so we can use the additional function that the super class accepts as a second argument (the function has to return an observable! In our case we have an input that is a number so we will use the toObservable decorator that comes with the library). We also want to skip resolving if we don't have a selectedUserId so we will use the shouldSkip and connect it with a binding that has the same name as our directive *(inside the resolver: `@Input('appUserPostsResolver') shouldSkip;` / inside the html: `[appUserPostsResolver]="!selectedUserId"`)*. shouldSkip will make the resolve container skip calling resolve on this resolver but that means that we will have to individually call the resolve whenever the shouldSkip changes. We could of course use a setter for the shouldSkip and call resolve within if the value is true if we want ot resolve whenever the selectedUserId is present or we can use the config property that the library provides. 
+Config Options:
+
+  ⚠️ Using a config other than ResolverConfig.Default will disconnect the resolver resolve from the container but the container will track the state of the resolver.
+
+  * ResolverConfig.Default - don't auto resolve when skip or a depenency changes/emits.
+  * ResolverConfig.AutoResolve - auto resolve when skip or a depenency changes/emits.
+  * ResolverConfig.AutoResolveOnce - auto resolve once when skip or a depenency changes/emits (look at the scenarios bellow if you wonder when you should use this).
+
+  ⚠️Scenario for ResolverConfig.AutoResolveOnce:
+   * if shouldSkip = true
+     the resolver will be skiped until the shouldSkip is set to false. When that happens a resolve will be triggered but it won't trigger of future shouldSkip changes.
+
+**In this example we will use `ResolverConfig.AutoResolve` that means that every time the dependencies () change a resolve will be triggered.**
+
+
+*user-posts.resolver.ts*
+```typescript 
+import { Directive, Input } from '@angular/core';
+import { Resolver, HG_RESOLVERS, ResolverConfig, toObservable } from 'hg-resolvers';
+import { PostService } from '../post.service';
+import { Observable } from 'rxjs';
+
+@Directive({
+  selector: '[appUserPostsResolver]',
+  providers: [
+    {
+      provide: HG_RESOLVERS,
+      multi: true,
+      useExisting: UserPostsResolverDirective
+    }
+  ],
+  exportAs: 'appUserPostsResolver'
+}) export class UserPostsResolverDirective extends Resolver<any[]> {
+
+  // skip resolve until shouldSkip is falsy
+  @Input('appUserPostsResolver') shouldSkip;
+
+  // auto resolve when dependencies change
+  config = ResolverConfig.AutoResolve;
+
+  // input dependency converted to a stream
+  @Input() @toObservable selectedUserId: Observable<number>;
+
+  constructor(postService: PostService) {
+    // the resolve function now accepts an array with the dependency values
+    // and the second argument is a function that returns an observable from all the dependencies
+    super(([id]: [number]) => postService.loadUserPosts(id), () => this.selectedUserId);
+  }
+}
+
+```
+
+*some.component.html*
+```html
+<ng-template #loader let-showLoading>
+  <div *ngIf="showLoading">Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div *ngIf="isErrored">{{errors}}</div>
+</ng-template>
+
+<button (click)="resolve.refresh$.next()">Re-Fetch All</button>
+<input type="number" #idInput><button (click)="selectedUserId = idInput.value">Select</button>
+Don't forget to set AutoResolve on userPostsResolver because otherwise you have to call it explicitly
+<hg-resolve #resolve="hgResolve" appUserListResolver [appUserPostsResolver]="!selectedUserId"
+  [selectedUserId]="selectedUserId" #userListResolver="appUserListResolver" #userPostsResolver="appUserPostsResolver"
+  [loaderTemplateRef]="loader" [errorTemplateRef]="error" [resolveOnInit]="true">
+  <h2>Users</h2>
+  {{userListResolver.data$ | async | json}}
+  <ng-container *ngIf="userPostsResolver.data$ | async as userPosts">
+    <h2>User Posts</h2>
+    {{userPosts | json }}
+  </ng-container>
+</hg-resolve>
+```
+
+
+### 5. Remotely attaching resolvers
+
+Sometimes we want to attach a resolver to a container remotely/dynamically. We can use the [resolveAttach] directive
+
+*some.component.html*
+```html
+<ng-template #loader let-showLoading>
+  <div *ngIf="showLoading">Loading...</div>
+</ng-template>
+<ng-template #error let-isErrored let-errors="errors">
+  <div *ngIf="isErrored">{{errors}}</div>
+</ng-template>
+
+<button (click)="resolve.refresh$.next()">Re-Fetch All</button>
+<input type="number" #idInput><button (click)="selectedUserId = idInput.value">Select</button>
+Don't forget to set AutoResolve on userPostsResolver because otherwise you have to call it explicitly
+<hg-resolve #resolve="hgResolve" appUserListResolver #userListResolver="appUserListResolver"
+  [loaderTemplateRef]="loader" [errorTemplateRef]="error" [resolveOnInit]="true">
+  <h2>Users</h2>
+  {{userListResolver.data$ | async | json}}
+
+  You can use this for attaching directives dynamically based on ngIf / ngSwitch / ngFor
+
+  <ng-container hgResolveAttach [appUserPostsResolver]="!selectedUserId" [selectedUserId]="selectedUserId"
+    #userPostsResolver="appUserPostsResolver">
+    <ng-container *ngIf="userPostsResolver.data$ | async as userPosts">
+      <h2>User Posts</h2>
+      {{userPosts | json }}
+    </ng-container>
+  </ng-container>
+</hg-resolve>
+```
+
+### 6. Connectin multiple instance of the same resolver.
+
+In some cases we might have diffrent sections of the page that might be present at the same time or might not but depend on the same data but we don't want to be making the same call multiple times. This is where we can use the `autoUniqueId = true;` option or just provide a unique id of our own by using `uid = '<someting>';`
+
+*user-posts.resolver.ts*
+```typescript 
+import { Directive, Input } from '@angular/core';
+import { Resolver, HG_RESOLVERS, ResolverConfig, toObservable } from 'hg-resolvers';
+import { PostService } from '../post.service';
+import { Observable } from 'rxjs';
+
+@Directive({
+  selector: '[appUserPostsResolver]',
+  providers: [
+    {
+      provide: HG_RESOLVERS,
+      multi: true,
+      useExisting: UserPostsResolverDirective
+    }
+  ],
+  exportAs: 'appUserPostsResolver'
+}) export class UserPostsResolverDirective extends Resolver<any[]> {
+
+  @Input('appUserPostsResolver') shouldSkip;
+
+  config = ResolverConfig.AutoResolve;
+
+  @Input() @toObservable selectedUserId: Observable<number>;
+
+  autoUniqueId = true; // we just need to add this
+
+  constructor(postService: PostService) {
+    super(([id]: [number]) => postService.loadUserPosts(id), () => this.selectedUserId);
+  }
+}
+
+```
+
+*NOTE: Using autoUniqueId is useful for the given case. If you need the same data on multiple places inside your template but the directive will always be visible it's preferred to use a template reference variable holding reference to the directive*
+
+
+#### For a more complex example please check the [demo app](https://stackblitz.com/github/IliaIdakiev/hg-resolvers)
+
+## Error Handling
+
+Each resolver has an error property that will contain the error if one exists. You can use this property inside your templates via template reference variable containing the resolver instance to present the error message/code to the user. 
+
+Each resolve container has a errors property containing all the errors from the connected resolver directives
+
+
+**ALL CONTRIBUTIONS ARE VERY WELCOME!**
+
+TODO:
+* Unit testing
+* Resolver schematic
 
 [Check our website](https://hillgrand.com/);

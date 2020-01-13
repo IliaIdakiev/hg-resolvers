@@ -1,21 +1,22 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { HomeComponent } from './home/home.component';
+import { UserListComponent } from './user-list/user-list.component';
+import { AboutComponent } from './about/about.component';
+import { UserListResolver } from './user-list.resolver';
 
 
 const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    component: HomeComponent
+    component: UserListComponent,
+    // resolve: {
+    //   users: UserListResolver
+    // }
   },
   {
-    path: 'user',
-    loadChildren: () => import('./user/user.module').then(m => m.UserModule)
-  },
-  {
-    path: 'post',
-    loadChildren: () => import('./post/post.module').then(m => m.PostModule)
+    path: 'about',
+    component: AboutComponent
   }
 ];
 
