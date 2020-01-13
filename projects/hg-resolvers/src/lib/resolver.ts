@@ -1,4 +1,4 @@
-import { first, takeUntil, filter, withLatestFrom, observeOn } from 'rxjs/operators';
+import { first, takeUntil, filter, withLatestFrom, observeOn, retry } from 'rxjs/operators';
 import { asapScheduler, Observable, combineLatest, of, Subscription, ReplaySubject, Subject, asyncScheduler } from 'rxjs';
 import { diff, NOTHING } from './utils/differ';
 import { ResolveComponent } from './resolve/resolve.component';
@@ -38,8 +38,6 @@ export class Resolver<T, D = any> {
   } = {};
 
   public config = ResolverConfig.Default;
-
-
 
   // tslint:disable-next-line:variable-name
   private _isAlive$: Subject<void> = new Subject();
@@ -436,7 +434,7 @@ export class Resolver<T, D = any> {
     asapScheduler.schedule(() => {
       if (
         (this.parentContainer && this.parentContainer.resolveOnInit && this.config === ResolverConfig.Default) ||
-        this.resolveOnInit && this.config === ResolverConfig.Default
+        !(this.resolveOnInit && this.config === ResolverConfig.Default)
       ) { return; }
       this._process();
     });
@@ -454,6 +452,8 @@ export class Resolver<T, D = any> {
         if (this._dependencySubscription) { this._dependencySubscription.unsubscribe(); }
         return;
       }
+
+      if (this.resolveOnInit && !this.parentContainer) { this.resolve(); return; }
 
       // resolve only if we haven't subscribed already
       const isAutoResolve = this.config === ResolverConfig.AutoResolve;
