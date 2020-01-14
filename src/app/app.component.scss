@@ -1,3 +1,11 @@
-nav a {
-  display: block;
+@import '~@angular/material/theming';
+
+$primary: mat-palette($mat-deep-purple);
+
+.active {
+  color: mat-color($primary);
+}
+
+mat-sidenav-container {
+  height: 100%;
 }

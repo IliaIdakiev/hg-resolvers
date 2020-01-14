@@ -1,12 +1,42 @@
-<nav>
-  <a routerLink="/single-resolver">1. Single Resolver</a>
-  <a routerLink="/single-resolver-with-container">2. Single Resolver With Container</a>
-  <a routerLink="/container-with-multiple-resolvers">3. Container With Multiple Resolvers</a>
-  <a routerLink="/container-with-multiple-resolvers-with-dependencies">3. Container With Multiple Resolvers with
-    Dependencies</a>
-  <a routerLink="/dynamically-attaching-resolvers">4. Dynamically Attaching Resolvers</a>
-  <a routerLink="/dynamically-attaching-duplicate-resolvers">5. Dynamically Attaching Duplicate Resolvers</a>
-  <a routerLink="/complex-loaders">6. Complex Loaders</a>
-  <a routerLink="/about">About</a>
-</nav>
-<router-outlet></router-outlet>
+<mat-toolbar color="primary">
+  <mat-toolbar-row>
+    <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="toggleOpen()" color="secondary">
+      <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+    </button>
+    <h1>HG Resolvers</h1>
+  </mat-toolbar-row>
+</mat-toolbar>
+<mat-sidenav-container class="example-container">
+  <mat-sidenav mode="side" [opened]="opened">
+    <mat-nav-list>
+      <mat-list-item routerLink="/single-resolver" routerLinkActive="active">
+        <a>1. Single Resolver</a>
+      </mat-list-item>
+      <mat-list-item routerLink="/single-resolver-with-container" routerLinkActive="active">
+        <a>2. Single Resolver With Container</a>
+      </mat-list-item>
+      <mat-list-item routerLink="/container-with-multiple-resolvers" routerLinkActive="active">
+        <a>3. Container With Multiple Resolvers</a>
+      </mat-list-item>
+      <mat-list-item routerLink="/container-with-multiple-resolvers-with-dependencies" routerLinkActive="active">
+        <a>3. Container With Multiple Resolvers with
+          Dependencies</a>
+      </mat-list-item>
+      <mat-list-item routerLink="/dynamically-attaching-resolvers" routerLinkActive="active">
+        <a>4. Dynamically Attaching Resolvers</a>
+      </mat-list-item>
+      <mat-list-item routerLink="/dynamically-attaching-duplicate-resolvers" routerLinkActive="active">
+        <a>5. Dynamically Attaching Duplicate Resolvers</a>
+      </mat-list-item>
+      <mat-list-item routerLink="/complex-loaders" routerLinkActive="active">
+        <a>6. Complex Loaders</a>
+      </mat-list-item>
+      <mat-list-item routerLink="/about" routerLinkActive="active">
+        <a>About</a>
+      </mat-list-item>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>

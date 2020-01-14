@@ -6,5 +6,9 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'hg-resolvers-demo';
+  opened = true;
+
+  toggleOpen() {
+    this.opened = !this.opened;
+  }
 }
