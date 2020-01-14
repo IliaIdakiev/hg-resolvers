@@ -6,6 +6,7 @@ import { SingleResolverRoutingModule } from './dynamically-attaching-resolvers-r
 import { HGResolversModule } from 'hg-resolvers';
 import { PostListResolverDirective } from './-resolvers/post-list.resolver';
 import { UserPostsResolverDirective } from './-resolvers/user-posts.resolver';
+import { MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatCardModule, MatDividerModule } from '@angular/material';
 
 @NgModule({
   declarations: [
@@ -17,6 +18,11 @@ import { UserPostsResolverDirective } from './-resolvers/user-posts.resolver';
   imports: [
     CommonModule,
     SingleResolverRoutingModule,
+    MatTableModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatCardModule,
+    MatDividerModule,
     // We need to add the HGResolversModule so we can use the resolve container and the attach directive
     HGResolversModule
   ],
