@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { SingleResolverComponent } from './single-resolver.component';
 import { UserListResolverDirective } from './-resolvers/user-list.resolver';
 import { SingleResolverRoutingModule } from './single-resolver-routing.module';
+import { MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatCardModule, MatDividerModule } from '@angular/material';
 
 
 @NgModule({
@@ -12,7 +13,12 @@ import { SingleResolverRoutingModule } from './single-resolver-routing.module';
   ],
   imports: [
     CommonModule,
-    SingleResolverRoutingModule
+    MatTableModule,
+    SingleResolverRoutingModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatCardModule,
+    MatDividerModule
   ],
 
 })

@@ -1,0 +1,29 @@
+mat-card {
+  height: 100%;
+  min-height: 100%;
+}
+
+mat-card-content {
+  height: 600px;
+}
+
+table {
+  width: 100%;
+}
+
+#content  {
+  flex: 1;
+}
+
+#reload-btn {
+  margin-right: 20px;
+}
+
+#container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 100%;
+  min-height: 100%;
+} 
