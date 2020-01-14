@@ -7,6 +7,8 @@ import { Component, OnInit } from '@angular/core';
 })
 export class SingleResolverWithContainerComponent implements OnInit {
 
+  displayedColumns = ['username', 'email', 'name'];
+
   constructor() { }
 
   ngOnInit() {

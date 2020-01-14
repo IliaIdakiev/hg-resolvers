@@ -4,6 +4,7 @@ import { SingleResolverWithContainerComponent } from './single-resolver-with-con
 import { UserListResolverDirective } from './-resolvers/user-list.resolver';
 import { SingleResolverRoutingModule } from './single-resolver-with-container-routing.module';
 import { HGResolversModule } from 'hg-resolvers';
+import { MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatCardModule, MatDividerModule } from '@angular/material';
 
 
 @NgModule({
@@ -14,6 +15,11 @@ import { HGResolversModule } from 'hg-resolvers';
   imports: [
     CommonModule,
     SingleResolverRoutingModule,
+    MatTableModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatCardModule,
+    MatDividerModule,
     // We need to add the HGResolversModule so we can use the resolve container
     HGResolversModule
   ],

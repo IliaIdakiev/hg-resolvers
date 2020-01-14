@@ -13,8 +13,8 @@ import { MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatCardModul
   ],
   imports: [
     CommonModule,
-    MatTableModule,
     SingleResolverRoutingModule,
+    MatTableModule,
     MatButtonModule,
     MatProgressSpinnerModule,
     MatCardModule,
