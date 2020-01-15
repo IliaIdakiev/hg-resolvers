@@ -9,9 +9,17 @@ export class ContainerWithMultipleResolversWithDependenciesComponent implements 
 
   selectedUserId = null;
 
+  displayedColumns = ['username', 'email', 'name'];
+  postsDisplayedColumns = ['userId', 'title'];
+
   constructor() { }
 
   ngOnInit() {
+  }
+
+  rowClickHandler(user: any) {
+    if (this.selectedUserId === user.id) { this.selectedUserId = null; return; }
+    this.selectedUserId = user.id;
   }
 
 }

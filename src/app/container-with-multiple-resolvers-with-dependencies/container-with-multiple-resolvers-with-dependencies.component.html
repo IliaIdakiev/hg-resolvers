@@ -1,27 +1,99 @@
-<h3>4. Container With Multiple Resolvers and Dependencies (Skipping Resolvers)</h3>
-<div>In this scenario we have a user list resolver and a user post resolver. The user posts resolver is skipped until we
-  select a valid userId value. Whenever the userId value is set the user posts resolver will auto resolve (auto load the
-  data) but that won't
-  trigger a user list resolve (For more info look into the user-posts resolver file)</div>
-<div style="font-style: italic;">(Note: UserService loadUsers and PostServie loadPosts have a delay operator applied!
-  Also if you go to the user
-  service you can uncomment to throwError line in order to view how the error will be displayed)</div>
-<ng-template #loader let-showLoading>
-  <div *ngIf="showLoading">Loading...</div>
-</ng-template>
-<ng-template #error let-isErrored let-errors="errors">
-  <div *ngIf="isErrored">{{errors}}</div>
-</ng-template>
+<mat-card class="example-card">
+  <mat-card-header>
+    <h1>4. Container With Multiple Resolvers and Dependencies (Skipping Resolvers)</h1>
+  </mat-card-header>
+  <mat-card-content>
+    <p>In this scenario we have a user list resolver and a user post resolver. The user posts resolver is skipped until
+      we
+      select a valid userId value. Whenever the userId value is set the user posts resolver will auto resolve (auto load
+      the
+      data) but that won't
+      trigger a user list resolve (For more info look into the user-posts resolver file). We also added the
+      [hideContentUntilResolvedSuccessfully]="false" since we want to show the content of the resolve container all the
+      time and actially display the loader/spinner over the content.
+    </p>
+    <br />
+    <mat-divider></mat-divider>
+    <br />
+    <div>
+      <button id="reload-btn" button mat-raised-button color="primary" (click)="resolve.resolve()">Trigger
+        Resolve</button>
+      <br />
+      <br />
+      <div style="font-style: italic;">Note: UserService loadUsers and PostServie loadPosts have a delay operator
+        applied!
+        Also if you go to the user
+        service you can uncomment to throwError line in order to view how the error will be displayed</div>
+    </div>
+    <br />
+    <mat-divider></mat-divider>
+    <br />
+    <ng-template #loader let-showLoading>
+      <mat-progress-spinner class="example-margin" color="primary" mode="indeterminate">
+      </mat-progress-spinner>
+      <div id="loader-overlay"></div>
+    </ng-template>
+    <ng-template #error let-isErrored let-errors="errors">
+      <div>{{errors}}</div>
+    </ng-template>
 
-<button (click)="resolve.refresh$.next()">Re-Fetch All</button>
-User Id:<input type="number" #idInput><button (click)="selectedUserId = idInput.value">Select</button>
-<hg-resolve #resolve="hgResolve" [resolveOnInit]="true" appUserListResolver [appUserPostsResolver]="!selectedUserId"
-  [selectedUserId]="selectedUserId" #userListResolver="appUserListResolver" #userPostsResolver="appUserPostsResolver"
-  [loaderTemplateRef]="loader" [errorTemplateRef]="error" [resolveOnInit]="true">
-  <h2>Users</h2>
-  {{userListResolver.data$ | async | json}}
-  <ng-container *ngIf="userPostsResolver.data$ | async as userPosts">
-    <h2>User Posts</h2>
-    {{userPosts | json }}
-  </ng-container>
-</hg-resolve>
+    <hg-resolve #resolve="hgResolve" [resolveOnInit]="true" appUserListResolver [appUserPostsResolver]="!selectedUserId"
+      [selectedUserId]="selectedUserId" #userListResolver="appUserListResolver"
+      #userPostsResolver="appUserPostsResolver" [loaderTemplateRef]="loader" [autoControlLoader]="true"
+      [hideContentUntilResolvedSuccessfully]="false" [errorTemplateRef]="error" [autoControlError]="true"
+      [resolveOnInit]="true">
+      <mat-grid-list cols="4" rowHeight="600px">
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <div *ngIf="userListResolver.data$ | async" class="resolve-content">
+            <h2>Users</h2>
+            <table mat-table [dataSource]="userListResolver.data$ | async">
+
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef> Name </th>
+                <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+              </ng-container>
+
+
+              <ng-container matColumnDef="username">
+                <th mat-header-cell *matHeaderCellDef> Username </th>
+                <td mat-cell *matCellDef="let element"> {{element.username}} </td>
+              </ng-container>
+
+
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef> Email </th>
+                <td mat-cell *matCellDef="let element"> {{element.email}} </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr [ngClass]="{ 'active': row.id === selectedUserId }" mat-row
+                *matRowDef="let row; columns: displayedColumns;" (click)="rowClickHandler(row)"></tr>
+            </table>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <div *ngIf="!selectedUserId && userListResolver.data$ | async">No User Selected</div>
+          <div *ngIf="selectedUserId && userPostsResolver.data$ | async" class="resolve-content">
+            <h2>Selected User Posts</h2>
+            <table mat-table [dataSource]="userPostsResolver.data$ | async">
+
+              <ng-container matColumnDef="userId">
+                <th mat-header-cell *matHeaderCellDef> User Id </th>
+                <td mat-cell *matCellDef="let element"> {{element.userId}} </td>
+              </ng-container>
+
+
+              <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef> Title </th>
+                <td mat-cell *matCellDef="let element"> {{element.title}} </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="postsDisplayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: postsDisplayedColumns;"></tr>
+            </table>
+          </div>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </hg-resolve>
+  </mat-card-content>
+</mat-card>
