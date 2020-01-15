@@ -1,19 +1,93 @@
-<h2>3. Container with multiple resolvers</h2>
-<div style="font-style: italic;">(Note: UserService loadUsers and PostServie loadPosts have a delay operator applied!
-  Also if you go to the user
-  service you can uncomment to throwError line in order to view how the error will be displayed)</div>
-<ng-template #loader let-showLoading>
-  <div>Loading...</div>
-</ng-template>
-<ng-template #error let-isErrored let-errors="errors">
-  <div>{{errors}}</div>
-</ng-template>
+<mat-card class="example-card">
+  <mat-card-header>
+    <h1>3. Container with multiple resolvers</h1>
+  </mat-card-header>
+  <mat-card-content>
+    <p>Here we are using a single directive that inherits Resolver on a resolve contauner. In this case when we need to
+      use multi provides to provide our directive and we need the HGResolversModule so we can use the resolve container.
+      The
+      container can accept a template for the loader and a template for the error in this case we are controlling when
+      to
+      show and hide them but the resolve component container can automatically show and hide them by binding
+      [autoControlError]="true" and [autoControlLoader]="true"
+    </p>
+    <br />
+    <mat-divider></mat-divider>
+    <br />
+    <div>
+      <button id="reload-btn" button mat-raised-button color="primary" (click)="resolve.resolve()">Trigger
+        Resolve</button>
+      <br />
+      <br />
+      <div style="font-style: italic;">(Note: UserService loadUsers and PostServie loadPosts have a delay operator
+        applied!
+        Also if you go to the user
+        service you can uncomment to throwError line in order to view how the error will be displayed)</div>
+    </div>
+    <br />
+    <mat-divider></mat-divider>
+    <br />
+    <ng-template #loader let-showLoading>
+      <mat-progress-spinner class="example-margin" color="primary" mode="indeterminate">
+      </mat-progress-spinner>
+    </ng-template>
+    <ng-template #error let-isErrored let-errors="errors">
+      <div>{{errors}}</div>
+    </ng-template>
 
-<hg-resolve appUserListResolver [resolveOnInit]="true" appPostListResolver #userListResolver="appUserListResolver"
-  #postListResolver="appPostListResolver" [loaderTemplateRef]="loader" [errorTemplateRef]="error"
-  [autoControlLoader]="true" [autoControlError]="true">
-  <h2>Users</h2>
-  {{userListResolver.data$ | async | json}}
-  <h2>Posts</h2>
-  {{postListResolver.data$ | async | json }}
-</hg-resolve>
+    <hg-resolve id="container" #resolve="hgResolve" appUserListResolver [resolveOnInit]="true" appPostListResolver
+      #userListResolver="appUserListResolver" #postListResolver="appPostListResolver" [loaderTemplateRef]="loader"
+      [errorTemplateRef]="error" [autoControlLoader]="true" [autoControlError]="true">
+      <mat-grid-list cols="4" rowHeight="600px">
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <div class="resolve-content">
+            <h2>Users</h2>
+            <table mat-table [dataSource]="userListResolver.data$ | async">
+
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef> Name </th>
+                <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+              </ng-container>
+
+
+              <ng-container matColumnDef="username">
+                <th mat-header-cell *matHeaderCellDef> Username </th>
+                <td mat-cell *matCellDef="let element"> {{element.username}} </td>
+              </ng-container>
+
+
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef> Email </th>
+                <td mat-cell *matCellDef="let element"> {{element.email}} </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <div class="resolve-content">
+            <h2>Posts</h2>
+            <table mat-table [dataSource]="postListResolver.data$ | async">
+
+              <ng-container matColumnDef="userId">
+                <th mat-header-cell *matHeaderCellDef> User Id </th>
+                <td mat-cell *matCellDef="let element"> {{element.userId}} </td>
+              </ng-container>
+
+
+              <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef> Title </th>
+                <td mat-cell *matCellDef="let element"> {{element.title}} </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="postsDisplayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: postsDisplayedColumns;"></tr>
+            </table>
+          </div>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </hg-resolve>
+  </mat-card-content>
+</mat-card>

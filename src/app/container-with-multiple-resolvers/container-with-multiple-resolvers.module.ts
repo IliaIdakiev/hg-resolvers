@@ -5,7 +5,14 @@ import { UserListResolverDirective } from './-resolvers/user-list.resolver';
 import { SingleResolverRoutingModule } from './container-with-multiple-resolvers-routing.module';
 import { HGResolversModule } from 'hg-resolvers';
 import { PostListResolverDirective } from './-resolvers/post-list.resolver';
-import { MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatCardModule, MatDividerModule } from '@angular/material';
+import {
+  MatTableModule,
+  MatButtonModule,
+  MatProgressSpinnerModule,
+  MatCardModule,
+  MatDividerModule,
+  MatGridListModule
+} from '@angular/material';
 
 
 @NgModule({
@@ -22,6 +29,7 @@ import { MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatCardModul
     MatProgressSpinnerModule,
     MatCardModule,
     MatDividerModule,
+    MatGridListModule,
     // We need to add the HGResolversModule so we can use the resolve container
     HGResolversModule
   ],

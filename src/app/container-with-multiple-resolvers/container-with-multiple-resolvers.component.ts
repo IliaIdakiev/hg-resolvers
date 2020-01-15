@@ -7,6 +7,9 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ContainerWithMultipleResolversComponent implements OnInit {
 
+  displayedColumns = ['username', 'email', 'name'];
+  postsDisplayedColumns = ['userId', 'title'];
+
   constructor() { }
 
   ngOnInit() {
