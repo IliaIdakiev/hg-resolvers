@@ -1,0 +1,94 @@
+@import '~@angular/material/theming';
+
+hg-resolve {
+  position: relative;
+}
+
+#loader-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(255,255,255,.5);
+  z-index: 8;
+}
+
+mat-progress-spinner {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  z-index: 9;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  margin: auto;
+}
+
+mat-card {
+  height: 100%;
+  min-height: 100%;
+  overflow: scroll;
+}
+
+mat-card-content {
+  height: 600px;
+}
+
+mat-grid-list {
+  width: 100%;
+}
+
+table {
+  width: 100%;
+  
+  margin: 20px;
+}
+
+.content {
+  flex: 1;
+}
+
+#reload-btn {
+  margin-right: 20px;
+}
+
+#container {
+  // position: relative;
+  max-height: 400px;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 100%;
+  min-height: 100%;
+} 
+
+.resolve-content {
+  align-self: baseline;
+  padding: 10px;
+}
+
+table {
+  margin: 0;
+}
+
+mat-grid-tile {
+  overflow-y: scroll;
+  & + mat-grid-tile {
+    border-left: 1px solid lightgray;
+  }
+}
+
+
+
+$primary: mat-palette($mat-deep-purple);
+
+.active {
+  background-color: mat-color($primary);
+  td {
+    color: white;
+  }
+}

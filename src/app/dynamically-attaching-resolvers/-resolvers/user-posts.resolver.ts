@@ -15,7 +15,6 @@ import { Observable } from 'rxjs';
   exportAs: 'appUserPostsResolver'
 }) export class UserPostsResolverDirective extends Resolver<any[]> {
 
-  @Input('appUserPostsResolver') shouldSkip;
 
   // We would like to auto resolve (re-fetch the data) this resolver anytime a dependency stream emits
   // so we use the ResolverConfig.AutoResolve value. If you want it to resolve only once (after the first emission of the dependencies)
