@@ -6,7 +6,15 @@ import { SingleResolverRoutingModule } from './complex-loaders-routing.module';
 import { HGResolversModule } from 'hg-resolvers';
 import { PostListResolverDirective } from './-resolvers/post-list.resolver';
 import { UserPostsResolverDirective } from './-resolvers/user-posts.resolver';
-import { MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatCardModule, MatDividerModule } from '@angular/material';
+import {
+  MatTableModule,
+  MatButtonModule,
+  MatProgressSpinnerModule,
+  MatCardModule,
+  MatDividerModule,
+  MatGridListModule
+} from '@angular/material';
+import { SpinnerComponent } from './spinner/spinner.component';
 
 @NgModule({
   declarations: [
@@ -14,6 +22,7 @@ import { MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatCardModul
     UserListResolverDirective,
     UserPostsResolverDirective,
     ComplexLoadersComponent,
+    SpinnerComponent,
   ],
   imports: [
     CommonModule,
@@ -23,6 +32,7 @@ import { MatTableModule, MatButtonModule, MatProgressSpinnerModule, MatCardModul
     MatProgressSpinnerModule,
     MatCardModule,
     MatDividerModule,
+    MatGridListModule,
     // We need to add the HGResolversModule so we can use the resolve container and the attach directive
     HGResolversModule
   ],

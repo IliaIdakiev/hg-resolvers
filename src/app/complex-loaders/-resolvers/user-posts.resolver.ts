@@ -15,14 +15,14 @@ import { Observable } from 'rxjs';
   exportAs: 'appUserPostsResolver'
 }) export class UserPostsResolverDirective extends Resolver<any[]> {
 
-  @Input('appUserPostsResolver') shouldSkip;
-
   // We would like to auto resolve (re-fetch the data) this resolver anytime a dependency stream emits
   // so we use the ResolverConfig.AutoResolve value. If you want it to resolve only once (after the first emission of the dependencies)
   // you can use ResolverConfig.AutoResolveOnce;
   // Keep in mind that if config is ResolverConfig.AutoResolve or ResolverConfig.AutoResolveOnce the resolve process is detached
   // from the resolve container but the resolver state is still calculated to the global resolve container state.
   config = ResolverConfig.AutoResolve;
+
+  uid = 'TEST';
 
   // we convert the normal @Input to an observable uisng the @toObservable decorator from the library
   @Input() @toObservable selectedUserId: Observable<number>;

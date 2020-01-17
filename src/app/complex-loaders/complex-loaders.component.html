@@ -1,53 +1,153 @@
-<h3>7. Complex loaders </h3>
-<h4>This example has exactly the same configuration as <a routerLink="dynamically-attaching-duplicate-resolvers">5.
-    Dynamically Attaching Duplicate Resolvers (with unique ids)</a>. The only difference are the complex loaders (marked
-  in red)
-  indicating that something is happening.</h4>
-<ng-template #error let-isErrored let-errors="errors">
-  <div *ngIf="errors[0]" style="color: red;">Error loading users!</div>
-</ng-template>
+<mat-card class="example-card">
+  <mat-card-header>
+    <h1>7. Complex loaders</h1>
+    <app-spinner *ngIf="
+        (!resolve.isResolvedSuccessfully && !resolve.isErrored) || 
+        (!!userPostsResolver && (!userPostsResolver?.isResolvedSuccessfully && !userPostsResolver?.isErrored))">
+    </app-spinner>
+  </mat-card-header>
+  <mat-card-content>
+    <p>This example has exactly the same configuration as <a routerLink="dynamically-attaching-duplicate-resolvers">5.
+        Dynamically Attaching Duplicate Resolvers (with unique ids)</a>. The only difference are the complex loaders
+      (marked
+      in red) indicating that something is happening.
+    </p>
+    <br />
+    <mat-divider></mat-divider>
+    <br />
+    <div>
+      <button button mat-raised-button color="primary" (click)="toggleUsersPostsCount()">Toggle User Posts
+        Count</button> Current value: {{showUserPostsCount}}
+
+      <button button mat-raised-button color="primary" (click)="toggleUsersPosts()">Toggle User Posts</button> Current
+      value: {{showUserPosts}}
+
+      <button id="reload-btn" button mat-raised-button color="primary" (click)="resolve.resolve()">Trigger
+        Resolve</button>
+
+      <br />
+      <div style="font-style: italic;">Note: UserService loadUsers and PostServie loadPosts have a delay operator
+        applied!
+        Also if you go to the user
+        service you can uncomment to throwError line in order to view how the error will be displayed</div>
+    </div>
+    <br />
+    <mat-divider></mat-divider>
+    <br />
+    <!-- <ng-template #loader let-showLoading>
+      <mat-progress-spinner class="example-margin" color="primary" mode="indeterminate">
+      </mat-progress-spinner>
+      <div id="loader-overlay"></div>
+    </ng-template>
+    <ng-template #error let-isErrored let-errors="errors">
+      <div>{{errors}}</div>
+    </ng-template> -->
+
+    <hg-resolve #resolve="hgResolve" [resolveOnInit]="true" appUserListResolver #userListResolver="appUserListResolver"
+      [hideContentUntilResolvedSuccessfully]="false" [resolveOnInit]="true">
+      <mat-grid-list cols="4" rowHeight="600px">
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <ng-container *ngIf="!userListResolver?.isResolvedSuccessfully">
+            <mat-progress-spinner id="user-list-loader" class="example-margin" color="primary" mode="indeterminate">
+            </mat-progress-spinner>
+            <div id="loader-overlay"></div>
+          </ng-container>
+
+          <div *ngIf="userListResolver.data$ | async" class="resolve-content">
+            <h2>Users</h2>
+            <table mat-table [dataSource]="userListResolver.data$ | async">
+
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef> Name </th>
+                <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+              </ng-container>
 
 
-<button (click)="resolve.refresh$.next()">Re-Fetch All</button>
-<input type="number" #idInput><button (click)="selectedUserId = idInput.value">Select</button>
-<div style="color: red;" *ngIf="
-  (!resolve.isResolvedSuccessfully && !resolve.isErrored) || 
-  (!userPostsResolver.shouldSkip && (!userPostsResolver.isResolvedSuccessfully && !userPostsResolver.isErrored))">
-  Spinner...</div>
-<div>Don't forget to set AutoResolve on userPostsResolver because otherwise you have to call it explicitly</div>
-<hg-resolve #resolve="hgResolve" appUserListResolver #userListResolver="appUserListResolver" [errorTemplateRef]="error"
-  [resolveOnInit]="true" [hideContentUntilResolvedSuccessfully]="false">
-  <div *ngIf="userListResolver.isResolvedSuccessfully">
-    <h2>Users</h2>
-    {{userListResolver.data$ | async | json}}
-  </div>
-  <div style="color: red;" *ngIf="!userListResolver.isResolvedSuccessfully && !resolve.isErrored">Loading Users...</div>
+              <ng-container matColumnDef="username">
+                <th mat-header-cell *matHeaderCellDef> Username </th>
+                <td mat-cell *matCellDef="let element"> {{element.username}} </td>
+              </ng-container>
 
-  <p>You can use hgResolveAttach for attaching directives dynamically based on ngIf / ngSwitch / ngFor</p>
-  <p>By using autoUniqueId = true you "connect" multiple directives of the same type so only one call is dispatched</p>
 
-  <div style="color: red;"
-    *ngIf="selectedUserId && !userPostsResolver.isResolvedSuccessfully && !userPostsResolver.isErrored">Loading User
-    Posts...
-  </div>
-  <ng-container hgResolveAttach #userPostsResolver="appUserPostsResolver" [appUserPostsResolver]="!selectedUserId"
-    [selectedUserId]="selectedUserId" #userPostsResolver="appUserPostsResolver">
-    <ng-container *ngIf="userPostsResolver.data$ | async as userPosts">
-      <h2>User Posts Count</h2>
-      {{userPosts.length}}
-    </ng-container>
-  </ng-container>
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef> Email </th>
+                <td mat-cell *matCellDef="let element"> {{element.email}} </td>
+              </ng-container>
 
-  <p>We can use the template reference variable from the above resolver in this case instead of using the resolve attach
-    directive but if we have the option to
-    individually show and hide boxes and there is no way of knowing if there is a box visible that has the resolve
-    directive the attach directive is very useful</p>
-  <ng-container hgResolveAttach [appUserPostsResolver]="!selectedUserId" [selectedUserId]="selectedUserId"
-    #userPostsResolver="appUserPostsResolver">
-    <ng-container *ngIf="userPostsResolver.data$ | async as userPosts">
-      <h2>User Posts</h2>
-      {{userPosts | json }}
-      <button (click)="userPostsResolver.resolve()">Reload</button>
-    </ng-container>
-  </ng-container>
-</hg-resolve>
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr [ngClass]="{ 'active': row.id === selectedUserId }" mat-row
+                *matRowDef="let row; columns: displayedColumns;" (click)="rowClickHandler(row)"></tr>
+            </table>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile [colspan]="2" [rowspan]="1">
+          <div *ngIf="!showUserPostsCount && !showUserPosts">Nothing to show here</div>
+          <div *ngIf="!selectedUserId && (showUserPostsCount || showUserPosts) && userListResolver.data$ | async">No
+            User Selected</div>
+
+          <div *ngIf="(selectedUserId && userListResolver.data$ | async)" class="resolve-content">
+
+            <ng-container *ngIf="showUserPostsCount">
+              <ng-container hgResolveAttach appUserPostsResolver [selectedUserId]="selectedUserId"
+                #userPostsResolver="appUserPostsResolver">
+
+                <div class="resolve-inner-content" style="height: 80px;">
+
+                  <ng-container *ngIf="userPostsResolver && !userPostsResolver.isResolvedSuccessfully">
+                    <mat-progress-spinner id="user-list-loader" class="example-margin" color="primary"
+                      mode="indeterminate">
+                    </mat-progress-spinner>
+                    <div id="loader-overlay"></div>
+                  </ng-container>
+                  <ng-container *ngIf="userPostsResolver.data$ | async">
+                    <h2>User Posts Count</h2>
+                    {{(userPostsResolver.data$ | async)?.length}}
+                  </ng-container>
+                </div>
+              </ng-container>
+            </ng-container>
+
+            <ng-container *ngIf="showUserPosts">
+              <ng-container hgResolveAttach appUserPostsResolver [selectedUserId]="selectedUserId"
+                #userPostsResolver="appUserPostsResolver">
+
+                <div class="resolve-inner-content" style="height: 600px;">
+                  <ng-container *ngIf="userPostsResolver && !userPostsResolver.isResolvedSuccessfully">
+                    <mat-progress-spinner id="user-list-loader" class="example-margin" color="primary"
+                      mode="indeterminate">
+                    </mat-progress-spinner>
+                    <div id="loader-overlay"></div>
+                  </ng-container>
+                  <ng-container *ngIf="userPostsResolver.data$ | async">
+                    <div id="holder">
+                      <h2>User Posts</h2>
+                      <button button mat-raised-button color="accent"
+                        (click)="userPostsResolver.resolve()">Reload</button>
+                    </div>
+                    <table mat-table [dataSource]="userPostsResolver.data$ | async">
+
+                      <ng-container matColumnDef="userId">
+                        <th mat-header-cell *matHeaderCellDef> User Id </th>
+                        <td mat-cell *matCellDef="let element"> {{element.userId}} </td>
+                      </ng-container>
+
+
+                      <ng-container matColumnDef="title">
+                        <th mat-header-cell *matHeaderCellDef> Title </th>
+                        <td mat-cell *matCellDef="let element"> {{element.title}} </td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="postsDisplayedColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: postsDisplayedColumns;"></tr>
+                    </table>
+                  </ng-container>
+
+                </div>
+              </ng-container>
+            </ng-container>
+          </div>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </hg-resolve>
+  </mat-card-content>
+</mat-card>
