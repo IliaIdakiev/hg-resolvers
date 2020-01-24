@@ -1,8 +1,10 @@
-import { first, takeUntil, filter, withLatestFrom, observeOn, retry } from 'rxjs/operators';
-import { asapScheduler, Observable, combineLatest, of, Subscription, ReplaySubject, Subject, asyncScheduler } from 'rxjs';
+import { first, takeUntil, filter, withLatestFrom, observeOn } from 'rxjs/operators';
+import { asapScheduler, Observable, combineLatest, of, Subscription, ReplaySubject, Subject, asyncScheduler, race } from 'rxjs';
 import { diff, NOTHING } from './utils/differ';
 import { ResolveComponent } from './resolve/resolve.component';
 import { ResolveDirective } from './resolve.directive';
+import { ResolveBase } from './resolve-base';
+import { IResolverRecord } from './interfaces';
 
 export enum ResolverConfig {
   Default = 'Default',
@@ -19,23 +21,10 @@ interface IActionsTarget<D> {
 
 type FunctionObservableTarget<T, D> = (deps: D) => Observable<T>;
 
-export class Resolver<T, D = any> {
-  private static uniqueIds = new WeakMap();
+const state = new WeakMap<ResolveBase, WeakMap<Resolver<any>, IResolverRecord>>();
 
-  private static resolverIdRecord: {
-    [renderId: string]: {
-      [resolverId: string]: {
-        asyncRenderId: any,
-        ctor: any,
-        requested: boolean,
-        resolved: boolean,
-        delegateInstance: Resolver<any>,
-        delegateChannel: ReplaySubject<{
-          type: 'deps' | 'success' | 'failure', data: any | Error
-        }>
-      }
-    }
-  } = {};
+export class Resolver<T, D = any> {
+  disconnectDifferentInstances = false;
 
   public config = ResolverConfig.Default;
 
@@ -43,13 +32,16 @@ export class Resolver<T, D = any> {
   private _isAlive$: Subject<void> = new Subject();
 
   // tslint:disable-next-line:variable-name
+  private _isPromoted$: Subject<void> = new Subject();
+
+  // tslint:disable-next-line:variable-name
+  private _isPromotedResolve = false;
+
+  // tslint:disable-next-line:variable-name
   protected parentContainer: ResolveComponent | ResolveDirective = null;
 
   // tslint:disable-next-line:variable-name
   private _shouldSkip = null;
-
-  // tslint:disable-next-line:variable-name
-  private _uniqueId = null;
 
   // tslint:disable-next-line:variable-name
   private _autoResolveOnceCompleted = false;
@@ -87,6 +79,9 @@ export class Resolver<T, D = any> {
 
   // tslint:disable-next-line:variable-name
   private _isAttached = false;
+
+  // tslint:disable-next-line:variable-name
+  private _isBeingDestroyed = false;
 
   public readonly isResolved = false;
   public readonly isResolvedSuccessfully = false;
@@ -126,54 +121,37 @@ export class Resolver<T, D = any> {
     return undefined;
   }
 
-  protected set uid(value: any) { this._uniqueId = value; }
 
   // tslint:disable-next-line:variable-name
-  private __parentRenderId__ = null;
+  private __parentResolveContainer__ = null;
 
-  set __parentRenderId(value: any) {
+  set setParentResolveContainer(parentResolveContainer: ResolveBase) {
     if (!this.constructor) {
       // tslint:disable-next-line:max-line-length
-      console.warn('hg-resolvers: Missing constructor property! Unique id loads are not possible without the constructor property!');
+      console.warn('hg-resolvers: Missing constructor property!');
       return;
     }
 
-    if (this._uniqueId) {
-      const existingRenderRecord = Resolver.resolverIdRecord[value];
-      const existingResolverRecord = existingRenderRecord && existingRenderRecord[this._uniqueId] || null;
-
-      if (existingResolverRecord && existingResolverRecord.ctor !== this.constructor) {
-        // tslint:disable-next-line:max-line-length
-        console.warn(`hg-resolvers: Multiple uids for different types of resolvers! Please use same uids for same type of components! No unique loads for ${this.constructor.name}!`);
-        return;
-      }
-
-      if (!Resolver.resolverIdRecord[value]) { Resolver.resolverIdRecord[value] = {}; }
-      if (!existingRenderRecord) {
-        Resolver.resolverIdRecord[value][this._uniqueId] = {
+    if (!this.disconnectDifferentInstances) {
+      let resolveContainerRecord: WeakMap<Resolver<any>, IResolverRecord> = state.get(parentResolveContainer) || new WeakMap();
+      const currentPrototype = Object.getPrototypeOf(this);
+      if (!resolveContainerRecord.has(currentPrototype)) {
+        resolveContainerRecord = new WeakMap();
+        resolveContainerRecord.set(currentPrototype, {
           ctor: this.constructor,
           requested: false,
           delegateInstance: this,
           delegateChannel: new ReplaySubject(1),
-          asyncRenderId: value,
-          resolved: false
-        };
+          resolveContainer: parentResolveContainer,
+          resolved: false,
+          subscriberInstances: []
+        });
+        state.set(parentResolveContainer, resolveContainerRecord);
       }
 
     }
 
-    this.__parentRenderId__ = value;
-  }
-
-  protected set autoUniqueId(value) {
-    if (!value) { return; }
-    const prototypeCtor = Object.getPrototypeOf(this).constructor;
-    let uniqueId = Resolver.uniqueIds.get(prototypeCtor);
-    if (!uniqueId) {
-      uniqueId = Symbol('Random Resolver Unique Id');
-      Resolver.uniqueIds.set(prototypeCtor, uniqueId);
-    }
-    this.uid = uniqueId;
+    this.__parentResolveContainer__ = parentResolveContainer;
   }
 
   set shouldSkip(value: boolean) {
@@ -207,21 +185,27 @@ export class Resolver<T, D = any> {
 
 
   private delegate(delegate: ReplaySubject<any>) {
-
     delegate.pipe(
       observeOn(asyncScheduler),
       filter(e => e.type === 'deps'),
       withLatestFrom(this.getDeps()),
-      takeUntil(this._isAlive$)
+      takeUntil(race(this._isAlive$, this._isPromoted$))
     ).subscribe(([{ data: otherDeps }, currentDeps]) => {
       const dataDiff = diff(otherDeps, currentDeps);
       if (dataDiff !== NOTHING) {
         // tslint:disable-next-line:max-line-length
-        console.warn(`hg-resolvers (${this.constructor.name}): Two different resolver dependency values received! You must remove the autoUniqueId or the matching uids that you\'ve provided!`);
+        console.warn(`hg-resolvers (${this.constructor.name}): Two different resolver dependency values received! You must set disconnectDifferentInstances to true if this was intentional!`);
       }
     });
 
-    delegate.pipe(filter(e => e.type === 'success'), takeUntil(this._isAlive$)).subscribe(e => {
+    delegate.pipe(filter(e => e.type === 'loading'), takeUntil(race(this._isAlive$, this._isPromoted$))).subscribe(() => {
+      (this as any).isResolved = false;
+      (this as any).isResolvedSuccessfully = false;
+      this._state.loading = true;
+      this._state.errored = false;
+    });
+
+    delegate.pipe(filter(e => e.type === 'success'), takeUntil(race(this._isAlive$, this._isPromoted$))).subscribe(e => {
       this._state.loading = false;
       this._state.errored = false;
 
@@ -234,7 +218,7 @@ export class Resolver<T, D = any> {
       }
     });
 
-    delegate.pipe(filter(e => e.type === 'failure'), takeUntil(this._isAlive$)).subscribe(e => {
+    delegate.pipe(filter(e => e.type === 'failure'), takeUntil(race(this._isAlive$, this._isPromoted$))).subscribe(e => {
       this._state.loading = false;
       this._state.errored = true;
 
@@ -246,14 +230,13 @@ export class Resolver<T, D = any> {
         this._error$.next(e.data);
       }
     });
-
-    this._isDelegated = true;
   }
 
-  private getResolverEntry() {
-    if (!this._uniqueId || !this.__parentRenderId__) { return null; }
-    return Resolver.resolverIdRecord[this.__parentRenderId__][this._uniqueId];
-
+  private getResolveContainerResolverRecord() {
+    if (this.disconnectDifferentInstances) { return null; }
+    const containerRecords = state.get(this.__parentResolveContainer__);
+    if (!containerRecords) { return null; }
+    return containerRecords.get(Object.getPrototypeOf(this));
   }
 
   private getDeps() {
@@ -276,24 +259,37 @@ export class Resolver<T, D = any> {
   }
 
   private _resolve(auto = false) {
-    const uniqueId = this._uniqueId;
-    const resolverIdRecordEntry = this.getResolverEntry();
 
-    // Needed - Handles the state when we have a delegate
-    (this as any).isResolved = false;
-    (this as any).isResolvedSuccessfully = false;
-
+    const resolverIdRecordEntry = this.getResolveContainerResolverRecord();
 
     if (resolverIdRecordEntry) {
       if (auto === false && this._isDelegated) {
         resolverIdRecordEntry.delegateInstance._resolve(false);
       } else if (!this._isDelegated && resolverIdRecordEntry.delegateInstance !== this) {
+        this._isDelegated = true;
         this.delegate(resolverIdRecordEntry.delegateChannel);
+        resolverIdRecordEntry.subscriberInstances = resolverIdRecordEntry.subscriberInstances.concat(this);
       }
-      if (this._isDelegated) { return; }
     }
 
-    if (resolverIdRecordEntry) {
+    // Needed - Handles the state when we have a delegate
+    if (!this._isPromotedResolve) {
+      (this as any).isResolved = this._isDelegated ? resolverIdRecordEntry.delegateInstance.isResolved : false;
+      (this as any).isResolvedSuccessfully = this._isDelegated ? resolverIdRecordEntry.delegateInstance.isResolvedSuccessfully : false;
+    }
+
+    if (this._isDelegated) {
+      const delegateInstance = resolverIdRecordEntry.delegateInstance;
+      if (delegateInstance.isResolvedSuccessfully) {
+        resolverIdRecordEntry.delegateChannel.next({ type: 'success', data: delegateInstance._data });
+      } else if (resolverIdRecordEntry.delegateInstance.isErrored) {
+        resolverIdRecordEntry.delegateChannel.next({ type: 'failure', data: delegateInstance._error });
+      }
+      return;
+    }
+
+
+    if (!this._isPromotedResolve && resolverIdRecordEntry) {
       resolverIdRecordEntry.requested = true;
       resolverIdRecordEntry.resolved = false;
     }
@@ -304,18 +300,24 @@ export class Resolver<T, D = any> {
     if (isAutoResolveOnceConfig) { this._autoResolveOnceCompleted = true; }
 
     asapScheduler.schedule(() => {
-      this._state.errored = false;
-      this._state.loading = true;
-      this._error = undefined;
+
+      if (!this._isPromotedResolve) {
+        this._state.errored = false;
+        this._state.loading = true;
+        this._error = undefined;
+      }
 
       const deps = this.getDeps();
 
       this._dependencySubscription = deps.subscribe(data => {
-
+        if (this._isPromotedResolve) {
+          this._isPromotedResolve = false;
+          return;
+        }
         // Needed - Handles the state when config is AutoResolve
         (this as any).isResolved = false;
         (this as any).isResolvedSuccessfully = false;
-        if (uniqueId && resolverIdRecordEntry) {
+        if (resolverIdRecordEntry) {
           resolverIdRecordEntry.requested = false;
         }
 
@@ -324,6 +326,9 @@ export class Resolver<T, D = any> {
 
         if (!this.isFunctionObservableTarget) {
           const target = this.targetFn as IActionsTarget<T>;
+          if (resolverDelegate) {
+            resolverDelegate.next({ type: 'loading', data: null });
+          }
           target.loadAction(data);
           target.success$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
             this._state.loading = false;
@@ -337,7 +342,7 @@ export class Resolver<T, D = any> {
               resolverIdRecordEntry.resolved = true;
             }
 
-            if (uniqueId && resolverIdRecordEntry) {
+            if (resolverIdRecordEntry) {
               resolverIdRecordEntry.requested = false;
             }
           });
@@ -353,7 +358,7 @@ export class Resolver<T, D = any> {
               resolverIdRecordEntry.resolved = true;
             }
 
-            if (uniqueId && resolverIdRecordEntry) {
+            if (resolverIdRecordEntry) {
               resolverIdRecordEntry.requested = false;
             }
           });
@@ -362,6 +367,9 @@ export class Resolver<T, D = any> {
           if (this._functionObservableSubscription) {
             this._functionObservableSubscription.unsubscribe();
             this._functionObservableSubscription = undefined;
+          }
+          if (resolverDelegate) {
+            resolverDelegate.next({ type: 'loading', data: null });
           }
           this._functionObservableSubscription = targetFn(data).pipe(takeUntil(this._isAlive$)).subscribe({
             next: res => {
@@ -378,7 +386,7 @@ export class Resolver<T, D = any> {
               this._state.loading = false;
               this._state.errored = false;
 
-              if (uniqueId && resolverIdRecordEntry) {
+              if (resolverIdRecordEntry) {
                 resolverIdRecordEntry.requested = false;
               }
             },
@@ -396,7 +404,7 @@ export class Resolver<T, D = any> {
               this._state.loading = false;
               this._state.errored = true;
 
-              if (uniqueId && resolverIdRecordEntry) {
+              if (resolverIdRecordEntry) {
                 resolverIdRecordEntry.requested = false;
               }
             },
@@ -409,14 +417,79 @@ export class Resolver<T, D = any> {
     });
   }
 
-  destroy() {
+  promoteNextResolver() {
+    const resolveContainerRecord = state.get(this.__parentResolveContainer__);
+    if (!resolveContainerRecord) { return; }
+    const prototype = Object.getPrototypeOf(this);
+    const record = resolveContainerRecord.get(prototype);
+    if (!record || record.subscriberInstances.length === 0) { return; }
+    const resolver = record.subscriberInstances[0];
+    if (!resolver) { return; }
+    resolver.promote();
+    record.subscriberInstances = record.subscriberInstances.slice(1);
+  }
+
+  promote() {
+    this._isPromoted$.next();
+    this._isPromotedResolve = true;
+    this._isDelegated = false;
+
+    const resolveContainerRecord = state.get(this.__parentResolveContainer__);
+    if (resolveContainerRecord) {
+      const prototype = Object.getPrototypeOf(this);
+      const record = resolveContainerRecord.get(prototype);
+      if (record) {
+        record.delegateInstance = this;
+        record.delegateChannel = new ReplaySubject(1);
+      }
+    }
+    Promise.resolve().then(() => {
+      if (this._isBeingDestroyed) { return; }
+      this.resolve();
+    });
+  }
+
+  killStreams() {
     this._isAlive$.next();
     this._isAlive$.complete();
+  }
 
-    if (this._uniqueId) {
-      const { [this.__parentRenderId__]: { [this._uniqueId]: deletedEntry, ...inner }, ...outer } = Resolver.resolverIdRecord;
-      if (deletedEntry) { deletedEntry.delegateChannel.complete(); }
-      Resolver.resolverIdRecord[this.__parentRenderId__] = { ...outer, [this.__parentRenderId__]: inner };
+  destroy() {
+    let waitUnitlResolved = false;
+    let isDelegate = false;
+    this._isBeingDestroyed = true;
+
+    if (!this.disconnectDifferentInstances) {
+      const resolveContainerRecord = state.get(this.__parentResolveContainer__);
+      const prototype = Object.getPrototypeOf(this);
+      if (resolveContainerRecord && resolveContainerRecord.has(prototype)) {
+        const record = resolveContainerRecord.get(prototype);
+        if (record.delegateInstance === this) {
+          isDelegate = true;
+          if (this.isLoading) { waitUnitlResolved = true; }
+          if (record.subscriberInstances.length === 0) {
+            Promise.resolve().then(() => { resolveContainerRecord.delete(prototype); });
+          }
+        } else {
+          record.subscriberInstances = record.subscriberInstances.filter(i => i !== this);
+        }
+      }
+    }
+
+    if (waitUnitlResolved) {
+      this.data$.pipe(first()).subscribe({
+        next: () => {
+          this.killStreams();
+          if (isDelegate) { this.promoteNextResolver(); }
+        },
+        error: () => {
+          this.killStreams();
+          if (isDelegate) { this.promoteNextResolver(); }
+        }
+      });
+    } else {
+      this.killStreams();
+      if (isDelegate) { this.promoteNextResolver(); }
     }
 
     if (!this._state.loading) { return; }

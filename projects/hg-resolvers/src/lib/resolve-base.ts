@@ -1,13 +1,10 @@
 import { Resolver, ResolverConfig } from './resolver';
 import { asapScheduler, Subject } from 'rxjs';
 
-const ids = [];
-
-export class ResolverBase {
+export class ResolveBase {
 
   refresh$: Subject<void> = new Subject();
 
-  uniqueId: symbol;
   isFunctionObservableTargetDirectivesCount = 0;
   discardSkippedResolvers = true;
 
@@ -54,17 +51,15 @@ export class ResolverBase {
   }
 
   constructor(protected resolvers: Resolver<any>[] = []) {
-    this.uniqueId = Symbol('Unique Async Render');
-    ids.push(this.uniqueId);
     this.resolvers = [].concat(this.resolvers || []);
     this.resolvers.forEach(r => {
-      r.__parentRenderId = this.uniqueId;
+      r.setParentResolveContainer = this;
       if ((r as any).isFunctionObservableTarget) { this.isFunctionObservableTargetDirectivesCount++; }
     });
   }
 
   attachResolver(resolver: Resolver<any>) {
-    resolver.__parentRenderId = this.uniqueId;
+    resolver.setParentResolveContainer = this;
     this.resolvers = this.resolvers.concat(resolver);
     if ((resolver as any).isFunctionObservableTarget) { this.isFunctionObservableTargetDirectivesCount++; }
   }

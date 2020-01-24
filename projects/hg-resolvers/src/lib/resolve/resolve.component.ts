@@ -1,7 +1,7 @@
 import { Component, Input, Inject, TemplateRef, Optional } from '@angular/core';
 import { Subject } from 'rxjs';
 import { Resolver } from '../resolver';
-import { ResolverBase } from '../resolve-base';
+import { ResolveBase } from '../resolve-base';
 import { HG_RESOLVERS } from '../injection-tokens';
 
 @Component({
@@ -10,7 +10,7 @@ import { HG_RESOLVERS } from '../injection-tokens';
   styleUrls: ['./resolve.component.scss'],
   exportAs: 'hgResolve'
 })
-export class ResolveComponent extends ResolverBase {
+export class ResolveComponent extends ResolveBase {
 
   refresh$: Subject<void>;
 

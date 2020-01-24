@@ -1,14 +1,14 @@
 import { Directive, Inject, Optional, TemplateRef, ViewContainerRef, Input } from '@angular/core';
 import { Subject } from 'rxjs';
 import { Resolver } from './resolver';
-import { ResolverBase } from './resolve-base';
+import { ResolveBase } from './resolve-base';
 import { HG_RESOLVERS } from './injection-tokens';
 
 @Directive({
   selector: '[hgResolve]',
   exportAs: 'hgResolve'
 })
-export class ResolveDirective extends ResolverBase {
+export class ResolveDirective extends ResolveBase {
 
   refresh$: Subject<void>;
 
