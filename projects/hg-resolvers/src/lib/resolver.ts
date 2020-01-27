@@ -506,8 +506,10 @@ export class Resolver<T, D = any> {
   ngOnInit() {
     asapScheduler.schedule(() => {
       if (
+        // the case when the container will call the resolve on the individual resolvers
         (this.parentContainer && this.parentContainer.resolveOnInit && this.config === ResolverConfig.Default) ||
-        !(this.resolveOnInit && this.config === ResolverConfig.Default)
+        // in this case the resolver is responsible for triggering the resolve (AutoResolve & AutoResolveOnce)
+        (!this.parentContainer && (!this.resolveOnInit && this.config === ResolverConfig.Default))
       ) { return; }
       this._process();
     });
