@@ -455,7 +455,7 @@ export class Resolver<T, D = any> {
   }
 
   destroy() {
-    let waitUnitlResolved = false;
+    let waitUntilResolved = false;
     let isDelegate = false;
     this._isBeingDestroyed = true;
 
@@ -466,7 +466,7 @@ export class Resolver<T, D = any> {
         const record = resolveContainerRecord.get(prototype);
         if (record.delegateInstance === this) {
           isDelegate = true;
-          if (this.isLoading) { waitUnitlResolved = true; }
+          if (this.isLoading) { waitUntilResolved = true; }
           if (record.subscriberInstances.length === 0) {
             Promise.resolve().then(() => { resolveContainerRecord.delete(prototype); });
           }
@@ -476,20 +476,20 @@ export class Resolver<T, D = any> {
       }
     }
 
-    if (waitUnitlResolved) {
-      this.data$.pipe(first()).subscribe({
+    if (waitUntilResolved) {
+      this.data$.pipe(observeOn(asyncScheduler), first()).subscribe({
         next: () => {
-          this.killStreams();
           if (isDelegate) { this.promoteNextResolver(); }
+          this.killStreams();
         },
         error: () => {
-          this.killStreams();
           if (isDelegate) { this.promoteNextResolver(); }
+          this.killStreams();
         }
       });
     } else {
-      this.killStreams();
       if (isDelegate) { this.promoteNextResolver(); }
+      this.killStreams();
     }
 
     if (!this._state.loading) { return; }
