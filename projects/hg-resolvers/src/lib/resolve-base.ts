@@ -8,7 +8,7 @@ export class ResolveBase {
   isFunctionObservableTargetDirectivesCount = 0;
   discardSkippedResolvers = true;
 
-  resolveOnInit = false;
+  resolveOnInit = true;
   isResolved = false;
   isResolvedSuccessfully = false;
   isLoading = false;

@@ -46,7 +46,7 @@ import { UserService } from '../user.service';
 
 Here we depend on clicking the button for the resolver to fetch the data and present it. But we can also extend our directive with a property `resolveOnInit = true;` that will trigger a resolve on init.
 
-*NOTE: resolveOnInit only works when we don't have a resolve container (see the example bellow this one) and with ResolverConfig.Default (check out resolve config info if you don't understand this)*
+*NOTE: resolveOnInit (default value - true) only works when we don't have a resolve container (see the example bellow this one) and with ResolverConfig.Default (check out resolve config info if you don't understand this)*
 
 *user-list.resolver.ts*
 ```typescript 
@@ -59,7 +59,7 @@ import { UserService } from '../user.service';
   exportAs: 'appUserListResolver'
 }) export class UserListResolverDirective extends Resolver<any[]> {
 
-  resolveOnInit = true;
+  // resolveOnInit = true; (default value is true)
 
   constructor(userService: UserService) {
     super(() => userService.loadUsers());
@@ -90,7 +90,7 @@ import { UserService } from '../user.service';
   ]
 }) export class UserListResolverDirective extends Resolver<any[]> {
 
-  // resolveOnInit = true; we have to remove this since the resolver will be controled by the resolve container
+  // resolveOnInit = true; (default value is true) and if used it won't matter since we have a resolve container
 
   constructor(userService: UserService) {
     super(() => userService.loadUsers());
@@ -137,7 +137,7 @@ export class AppModule { }
 </hg-resolve>
 ```
 
-This code won't trigger a resolve on init so if we want that we will have to add the `[resolveOnInit]="true"` to the resolve contaner.
+This code will trigger a resolve on init so if we dont' want that we will have to add the `[resolveOnInit]="false"` to the resolve contaner.
 
 *some.component.html*
 ```html
@@ -147,7 +147,7 @@ This code won't trigger a resolve on init so if we want that we will have to add
 <ng-template #error let-isErrored let-errors="errors">
   <div *ngIf="isErrored">{{errors}}</div>
 </ng-template>
-
+<!-- resolveOnInit has a default value of true so you don't need to have if in this case -->
 <hg-resolve [resolveOnInit]="true" appUserListResolver #userListResolver="appUserListResolver"
   [loaderTemplateRef]="loader" [errorTemplateRef]="error">
   {{userListResolver.data$ | async | json}}
@@ -243,6 +243,7 @@ import { Observable } from 'rxjs';
 <button (click)="resolve.refresh$.next()">Re-Fetch All</button>
 <input type="number" #idInput><button (click)="selectedUserId = idInput.value">Select</button>
 Don't forget to set AutoResolve on userPostsResolver because otherwise you have to call it explicitly
+<!-- resolveOnInit has a default value of true so you don't need to have if in this case -->
 <hg-resolve #resolve="hgResolve" appUserListResolver [appUserPostsResolver]="!selectedUserId"
   [selectedUserId]="selectedUserId" #userListResolver="appUserListResolver" #userPostsResolver="appUserPostsResolver"
   [loaderTemplateRef]="loader" [errorTemplateRef]="error" [resolveOnInit]="true">
@@ -272,6 +273,7 @@ Sometimes we want to attach a resolver to a container remotely/dynamically. We c
 <button (click)="resolve.refresh$.next()">Re-Fetch All</button>
 <input type="number" #idInput><button (click)="selectedUserId = idInput.value">Select</button>
 Don't forget to set AutoResolve on userPostsResolver because otherwise you have to call it explicitly
+<!-- resolveOnInit has a default value of true so you don't need to have if in this case -->
 <hg-resolve #resolve="hgResolve" appUserListResolver #userListResolver="appUserListResolver"
   [loaderTemplateRef]="loader" [errorTemplateRef]="error" [resolveOnInit]="true">
   <h2>Users</h2>

@@ -18,7 +18,7 @@ import { UserService } from '../../user.service';
   exportAs: 'appUserListResolver'
 }) export class UserListResolverDirective extends Resolver<any[]> {
 
-  resolveOnInit = true;
+  // resolveOnInit = true; (default value is true)
 
   constructor(userService: UserService) {
     super(() => userService.loadUsers());

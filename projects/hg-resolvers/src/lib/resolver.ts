@@ -85,7 +85,7 @@ export class Resolver<T, D = any> {
 
   public readonly isResolved = false;
   public readonly isResolvedSuccessfully = false;
-  public resolveOnInit = false;
+  public resolveOnInit = true;
 
   get isLoading() { return this._state.loading; }
 
