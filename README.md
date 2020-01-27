@@ -1,7 +1,7 @@
 # HG Resolvers
 
-Are you sick of the navigation blocking Angular resolvers. No problem... just use the hg-resolve component or directive for the different parts inside your component templates that need to be load and present some data and create resolver directives that you can attach to the inidvidual resolve components. You can also provide your cool loader to be visualized while loading
-the data or you can use the exported hg resolve component/directive (using `hgResolver`) with a template variable to be able to get access to the `isResolvedSuccessfully` variable. You can also trigger a refresh on all of the resolvers by using the `resolve` method or `refresh$.next()` subject on the resolve component/directive or trigger a individual resolve by querying the directive with ViewChild and calling the `resolve()` method inside the template. You can also configure the resolvers to resolve automatically on stream emissions. For more info check out the [app](https://stackblitz.com/github/IliaIdakiev/hg-resolvers) or look bellow. Happy coding!
+Are you sick of the navigation blocking Angular resolvers. No problem... just use the hg-resolve component/directive for the different parts inside your component templates that need to load and present data and create reusable resolver directives that you can attach to the inidvidual resolve components/directives. You can also provide your cool loader to be visualized while loading
+the data or you can use the exported hg resolve component/directive (using `hgResolver`) with a template variable to be able to get access to the `isResolvedSuccessfully` variable. You can also trigger a refresh on all of the resolvers by using the `resolve` method or `refresh$.next()` subject on the resolve component/directive or trigger a individual resolve by querying the directive with ViewChild and calling the `resolve()` method inside the template. You can also configure the resolvers to resolve automatically on stream emissions. For more info check out the [DEMO APP](https://stackblitz.com/github/IliaIdakiev/hg-resolvers) or look bellow. Happy coding!
 
 *NOTE: You can check the `src` folder of this repo for a more detailed explanation but the usage is as follows:*
 
@@ -289,9 +289,9 @@ Don't forget to set AutoResolve on userPostsResolver because otherwise you have 
 </hg-resolve>
 ```
 
-### 6. Connectin multiple instance of the same resolver.
+### 6. Multiple instance of the same resolver attached to the same resolve container.
 
-In some cases we might have diffrent sections of the page that might be present at the same time or might not but depend on the same data but we don't want to be making the same call multiple times. This is where we can use the `autoUniqueId = true;` option or just provide a unique id of our own by using `uid = '<someting>';`
+In some cases we might have diffrent sections of the page that might be present at the same time or might not but depend on the same data. In this case we don't want to be making the same request multiple times. By default multiple instances of the same resolver are connected witheachother and only one request is sent instead of multiple. In the case when you don't want this connection you can set the `disconnectDifferentInstances` property to true.
 
 *user-posts.resolver.ts*
 ```typescript 
@@ -318,7 +318,10 @@ import { Observable } from 'rxjs';
 
   @Input() @toObservable selectedUserId: Observable<number>;
 
-  autoUniqueId = true; // we just need to add this
+  // Two instance of the same resolver attached to the same resolve container by default work like only one resolver exists. 
+  // In a case where you don't want the default behaviour and you want the resolvers to be disconnected from eachother you can set 
+  // this property to true!
+  disconnectDifferentInstances = false;
 
   constructor(postService: PostService) {
     super(([id]: [number]) => postService.loadUserPosts(id), () => this.selectedUserId);
@@ -326,9 +329,6 @@ import { Observable } from 'rxjs';
 }
 
 ```
-
-*NOTE: Using autoUniqueId is useful for the given case. If you need the same data on multiple places inside your template but the directive will always be visible it's preferred to use a template reference variable holding reference to the directive*
-
 
 #### For a more complex example please check the [demo app](https://stackblitz.com/github/IliaIdakiev/hg-resolvers)
 

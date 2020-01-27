@@ -22,10 +22,13 @@ import { Observable } from 'rxjs';
   // from the resolve container but the resolver state is still calculated to the global resolve container state.
   config = ResolverConfig.AutoResolve;
 
-  uid = 'TEST';
-
   // we convert the normal @Input to an observable uisng the @toObservable decorator from the library
   @Input() @toObservable selectedUserId: Observable<number>;
+
+  // Two instance of the same resolver attached to the same resolve container by default work like only one resolver exists. 
+  // In a case where you don't want the default behaviour and you want the resolvers to be disconnected from eachother you can set 
+  // this property to false!
+  disconnectDifferentInstances = false;
 
   constructor(postService: PostService) {
     super(
