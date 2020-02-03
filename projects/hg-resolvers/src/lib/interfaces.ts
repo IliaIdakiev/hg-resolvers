@@ -1,4 +1,4 @@
-import { ReplaySubject } from 'rxjs';
+import { ReplaySubject, Subject } from 'rxjs';
 import { Resolver } from './resolver';
 import { ResolveBase } from './resolve-base';
 
@@ -9,7 +9,9 @@ export interface IResolverRecord {
   resolved: boolean;
   delegateInstance: Resolver<any>;
   delegateChannel: ReplaySubject<{
-    type: 'deps' | 'success' | 'failure' | 'loading', data: any | Error
+    type: 'deps' | 'success' | 'failure' | 'loading' | 'completed', data: any | Error
   }>;
   subscriberInstances: Resolver<any>[];
+  __subscriberInstances: Resolver<any>[];
+  noSubscriptions$: Subject<void>;
 }

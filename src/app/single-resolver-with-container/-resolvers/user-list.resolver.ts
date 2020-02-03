@@ -4,7 +4,7 @@ import { UserService } from '../../user.service';
 
 @Directive({
   selector: '[appUserListResolver]',
-  // We need to add multi provide the directive so it can get registered on the resolve contauner
+  // We need to add multi provide the directive so it can get registered on the resolve container
   providers: [
     {
       provide: HG_RESOLVERS,

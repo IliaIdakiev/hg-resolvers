@@ -12,13 +12,8 @@ export class ResolveDirective extends ResolveBase {
 
   refresh$: Subject<void>;
 
-  @Input() resolveOnInit = false;
+  @Input() resolveOnInit = true;
   @Input() discardSkippedResolvers = true;
-
-  isResolved = false;
-  isResolvedSuccessfully = false;
-  isLoading = false;
-  isErrored = false;
 
   constructor(
     @Inject(HG_RESOLVERS) @Optional() resolvers: Resolver<any>[] = [],

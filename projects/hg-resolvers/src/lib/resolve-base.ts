@@ -1,5 +1,7 @@
 import { Resolver, ResolverConfig } from './resolver';
-import { asapScheduler, Subject } from 'rxjs';
+import { asapScheduler, Subject, from, asyncScheduler, combineLatest, Subscription } from 'rxjs';
+import { scan, shareReplay, map } from 'rxjs/operators';
+import { ResolverState, ResolveState } from './enums';
 
 export class ResolveBase {
 
@@ -8,35 +10,68 @@ export class ResolveBase {
   isFunctionObservableTargetDirectivesCount = 0;
   discardSkippedResolvers = true;
 
+  state = ResolveState.PENDING;
+
   resolveOnInit = true;
-  isResolved = false;
-  isResolvedSuccessfully = false;
-  isLoading = false;
-  isErrored = false;
+
   // tslint:disable-next-line:variable-name
-  private _autoTriggeredCD = false;
+  private stateChangesSubscription: Subscription;
 
-  // tslint:disable-next-line:use-lifecycle-interface
-  ngDoCheck() {
-    if (this._autoTriggeredCD) { return; }
-    // TODO: probably there is a way to optimize this so its not calculated on every cd run
-    const { isResolvedSuccessfully, isResolved, isErrored, isLoading } = this.calculateState();
-    if (
-      isResolved !== this.isResolved ||
-      isResolvedSuccessfully !== this.isResolvedSuccessfully ||
-      isErrored !== this.isErrored ||
-      isLoading !== this.isLoading
-    ) {
-      this._autoTriggeredCD = true;
-      asapScheduler.schedule(() => {
-        this.isResolved = isResolved;
-        this.isResolvedSuccessfully = isResolvedSuccessfully;
-        this.isErrored = isErrored;
-        this.isLoading = isLoading;
+  get isSettled() { return this.state === ResolveState.SETTLED; }
 
-        this._autoTriggeredCD = false;
-      });
+  get isResolving() { return this.state === ResolveState.RESOLVING; }
+
+  get isPending() { return this.state === ResolveState.PENDING; }
+
+  get isErrored() { return this.state === ResolveState.ERRORED; }
+
+  // tslint:disable-next-line:variable-name
+  private _resolvers: Resolver<any>[];
+  // tslint:disable-next-line:variable-name
+  private _subscribeRequested = false;
+
+  public set resolvers(res: Resolver<any>[]) {
+    this._resolvers = res;
+    if (this._subscribeRequested) { return; }
+    this._subscribeRequested = true;
+    Promise.resolve().then(() => {
+      this._subscribeRequested = false;
+      this.subscribeToResolverStateChanges();
+    });
+  }
+
+  public get resolvers() {
+    return this._resolvers;
+  }
+
+
+  subscribeToResolverStateChanges() {
+    if (this.stateChangesSubscription) { this.stateChangesSubscription.unsubscribe(); this.stateChangesSubscription = null; }
+    this.stateChangesSubscription = combineLatest(
+      this.resolvers.map(r => r.stateChanges$.pipe(map(state => ({ state, resolver: r })))),
+    ).subscribe((data) => { this._calculateResolveState(data); });
+  }
+
+  private _calculateResolveState(data: { state: { previous: ResolverState; current: ResolverState; }; resolver: Resolver<any, any>; }[]) {
+    let settledCount = 0;
+    let allChecked = 0;
+    for (const { state: { current }, resolver } of data) {
+      if ((resolver as any)._isBeingDestroyed || resolver.shouldSkip) { continue; }
+      if (current === ResolverState.RESOLVING) {
+        this.state = ResolveState.RESOLVING;
+        return;
+      }
+
+      if (current === ResolverState.SETTLED) { settledCount++; }
+      allChecked++;
     }
+
+    if (settledCount === allChecked) {
+      this.state = ResolveState.SETTLED;
+      return;
+    }
+
+    this.state = ResolveState.ERRORED;
   }
 
   // tslint:disable-next-line:use-lifecycle-interface
@@ -50,8 +85,8 @@ export class ResolveBase {
     this.destroy();
   }
 
-  constructor(protected resolvers: Resolver<any>[] = []) {
-    this.resolvers = [].concat(this.resolvers || []);
+  constructor(resolvers: Resolver<any>[] = []) {
+    this.resolvers = [].concat(resolvers || []);
     this.resolvers.forEach(r => {
       r.setParentResolveContainer = this;
       if ((r as any).isFunctionObservableTarget) { this.isFunctionObservableTargetDirectivesCount++; }
@@ -71,30 +106,6 @@ export class ResolveBase {
       this.isFunctionObservableTargetDirectivesCount--;
     }
   }
-
-  calculateState() {
-    return this.resolvers.reduce((acc, res) => {
-      const isResolved = acc.isResolved &&
-        (this.discardSkippedResolvers ? (res.shouldSkip ? true : res.isResolved) : res.isResolved);
-
-      const isResolvedSuccessfully = acc.isResolvedSuccessfully &&
-        (this.discardSkippedResolvers ? (res.shouldSkip ? true : res.isResolvedSuccessfully) : res.isResolvedSuccessfully);
-
-      const isLoading = acc.isLoading ||
-        (this.discardSkippedResolvers ? (res.shouldSkip ? false : res.isLoading) : res.isLoading);
-
-      const isErrored = acc.isErrored ||
-        (this.discardSkippedResolvers ? (res.shouldSkip ? false : res.isErrored) : res.isErrored);
-
-      return { isResolved, isResolvedSuccessfully, isLoading, isErrored };
-    }, {
-      isResolved: true,
-      isResolvedSuccessfully: true,
-      isLoading: false,
-      isErrored: false
-    });
-  }
-
 
   protected destroy() {
     this.resolvers.forEach(res => res.destroy());

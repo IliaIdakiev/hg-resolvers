@@ -14,7 +14,7 @@ export class ResolveComponent extends ResolveBase {
 
   refresh$: Subject<void>;
 
-  @Input() resolveOnInit = false;
+  @Input() resolveOnInit = true;
 
   @Input() loaderTemplateRef: TemplateRef<any>;
   @Input() errorTemplateRef: TemplateRef<any>;

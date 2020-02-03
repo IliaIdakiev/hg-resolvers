@@ -17,10 +17,10 @@
     <mat-divider></mat-divider>
     <br />
     <div id="container" appUserListResolver #userListResolver="appUserListResolver">
-      <mat-progress-spinner *ngIf="!userListResolver.isResolved" class="example-margin" color="primary"
+      <mat-progress-spinner *ngIf="userListResolver.isResolving" class="example-margin" color="primary"
         mode="indeterminate">
       </mat-progress-spinner>
-      <div id="content" *ngIf="userListResolver.isResolvedSuccessfully">
+      <div id="content" *ngIf="!userListResolver.isResolving">
         <table mat-table [dataSource]="userListResolver.data$ | async" class="mat-elevation-z8">
 
           <ng-container matColumnDef="name">

@@ -1,7 +1,7 @@
 # HG Resolvers
 
 Are you sick of the navigation blocking Angular resolvers. No problem... just use the hg-resolve component/directive for the different parts inside your component templates that need to load and present data and create reusable resolver directives that you can attach to the inidvidual resolve components/directives. You can also provide your cool loader to be visualized while loading
-the data or you can use the exported hg resolve component/directive (using `hgResolver`) with a template variable to be able to get access to the `isResolvedSuccessfully` variable. You can also trigger a refresh on all of the resolvers by using the `resolve` method or `refresh$.next()` subject on the resolve component/directive or trigger a individual resolve by querying the directive with ViewChild and calling the `resolve()` method inside the template. You can also configure the resolvers to resolve automatically on stream emissions. For more info check out the [DEMO APP](https://stackblitz.com/github/IliaIdakiev/hg-resolvers) or look bellow. Happy coding!
+the data or you can use the exported hg resolve component/directive (using `hgResolver`) with a template variable to be able to get access to the state (Pending, Resolving, Settled, Errored, Completed) using  the variables - `isResolving`, `isSettled` and so on. You can also trigger a refresh on all of the resolvers by using the `resolve` method or `refresh$.next()` subject on the resolve component/directive or trigger a individual resolve by querying the directive with ViewChild and calling the `resolve()` method inside the template. You can also configure the resolvers to resolve automatically on stream emissions. For more info check out the [DEMO APP](https://stackblitz.com/github/IliaIdakiev/hg-resolvers) or look bellow. Happy coding!
 
 *NOTE: You can check the `src` folder of this repo for a more detailed explanation but the usage is as follows:*
 
@@ -37,8 +37,8 @@ import { UserService } from '../user.service';
 ```html
 <button (click)="userListResolver.resolve()">Load/Reload</button>
 <div appUserListResolver #userListResolver="appUserListResolver">
-  <div *ngIf="!userListResolver.isResolved">Loading</div>
-  <div *ngIf="userListResolver.isResolvedSuccessfully">{{userListResolver.data$ | async | json }}
+  <div *ngIf="userListResolver.isResolving">Loading</div>
+  <div *ngIf="!userListResolver.isResolving">{{userListResolver.data$ | async | json }}
   </div>
   <div *ngIf="userListResolver.isErrored">Error {{userListResolver.error}}</div>
 </div>

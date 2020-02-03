@@ -1,10 +1,11 @@
-import { first, takeUntil, filter, withLatestFrom, observeOn } from 'rxjs/operators';
+import { first, takeUntil, filter, withLatestFrom, observeOn, tap } from 'rxjs/operators';
 import { asapScheduler, Observable, combineLatest, of, Subscription, ReplaySubject, Subject, asyncScheduler, race } from 'rxjs';
 import { diff, NOTHING } from './utils/differ';
 import { ResolveComponent } from './resolve/resolve.component';
 import { ResolveDirective } from './resolve.directive';
 import { ResolveBase } from './resolve-base';
 import { IResolverRecord } from './interfaces';
+import { ResolverState } from './enums';
 
 export enum ResolverConfig {
   Default = 'Default',
@@ -28,6 +29,8 @@ export class Resolver<T, D = any> {
 
   public config = ResolverConfig.Default;
 
+  public stateChanges$: ReplaySubject<{ previous: ResolverState | null; current: ResolverState; }> = new ReplaySubject(1);
+
   // tslint:disable-next-line:variable-name
   private _isAlive$: Subject<void> = new Subject();
 
@@ -50,7 +53,7 @@ export class Resolver<T, D = any> {
   private _dependencySubscription: Subscription;
 
   // tslint:disable-next-line:variable-name
-  private _state = { loading: false, errored: false };
+  // private _state = { loading: false, errored: false };
 
   // tslint:disable-next-line:variable-name
   private _data$ = new ReplaySubject<T>(1);
@@ -83,15 +86,30 @@ export class Resolver<T, D = any> {
   // tslint:disable-next-line:variable-name
   private _isBeingDestroyed = false;
 
-  public readonly isResolved = false;
-  public readonly isResolvedSuccessfully = false;
   public resolveOnInit = true;
 
-  get isLoading() { return this._state.loading; }
+  public previousState = null;
 
-  get isPending() { return this._state.loading === false && this._state.errored === false; }
+  // tslint:disable-next-line:variable-name
+  private _state: ResolverState;
 
-  get isErrored() { return this._state.errored; }
+  public set state(s: ResolverState) {
+    this.previousState = this._state;
+    this._state = s;
+    this.stateChanges$.next({ previous: this.previousState, current: s });
+  }
+
+  public get state() {
+    return this._state;
+  }
+
+  get isSettled() { return this.state === ResolverState.SETTLED; }
+
+  get isResolving() { return this.state === ResolverState.RESOLVING; }
+
+  get isPending() { return this.state === ResolverState.PENDING; }
+
+  get isErrored() { return this.state === ResolverState.ERRORED; }
 
   get error(): Error {
     if (this.isFunctionObservableTarget) { return this._error; }
@@ -144,7 +162,15 @@ export class Resolver<T, D = any> {
           delegateChannel: new ReplaySubject(1),
           resolveContainer: parentResolveContainer,
           resolved: false,
-          subscriberInstances: []
+          __subscriberInstances: [],
+          set subscriberInstances(val: Resolver<any, any>[]) {
+            this.__subscriberInstances = val;
+            if (val.length === 0) { this.noSubscriptions$.next(); this.noSubscriptions$.complete(); }
+          },
+          get subscriberInstances() {
+            return this.__subscriberInstances;
+          },
+          noSubscriptions$: new Subject()
         });
         state.set(parentResolveContainer, resolveContainerRecord);
       }
@@ -155,16 +181,23 @@ export class Resolver<T, D = any> {
   }
 
   set shouldSkip(value: boolean) {
+    const target = this.targetFn as IActionsTarget<T>;
     if (value === true && !this._shouldSkip) {
       if (!!this._functionObservableSubscription) {
+        // if we have isFunctionObservableTarget === true as we are in the state of resolving we will have _functionObservableSubscription
         this._functionObservableSubscription.unsubscribe();
         this._functionObservableSubscription = undefined;
       } else if (!!this._dependencySubscription) {
+        // if we are in the state of autoResolve (waiting for the dependencies to change)
         this._dependencySubscription.unsubscribe();
         this._dependencySubscription = undefined;
+      } else if (this.state === ResolverState.RESOLVING && target.cancelAction) {
+        // if we have isFunctionObservableTarget === false as we are in the state of resolving
+        target.cancelAction();
       }
-      this._state.errored = false;
-      this._state.loading = false;
+      if (this.previousState !== null) { this.state = this.previousState; }
+      // this._state.errored = false;
+      // this._state.loading = false;
     }
 
     this._shouldSkip = value;
@@ -181,7 +214,9 @@ export class Resolver<T, D = any> {
   constructor(
     private targetFn: IActionsTarget<T> | FunctionObservableTarget<T, D>,
     private dependencies: () => (Observable<any> | any[]) | Observable<any> | Observable<any>[] = null
-  ) { }
+  ) {
+    this.state = ResolverState.PENDING;
+  }
 
 
   private delegate(delegate: ReplaySubject<any>) {
@@ -199,18 +234,11 @@ export class Resolver<T, D = any> {
     });
 
     delegate.pipe(filter(e => e.type === 'loading'), takeUntil(race(this._isAlive$, this._isPromoted$))).subscribe(() => {
-      (this as any).isResolved = false;
-      (this as any).isResolvedSuccessfully = false;
-      this._state.loading = true;
-      this._state.errored = false;
+      this.state = ResolverState.RESOLVING;
     });
 
     delegate.pipe(filter(e => e.type === 'success'), takeUntil(race(this._isAlive$, this._isPromoted$))).subscribe(e => {
-      this._state.loading = false;
-      this._state.errored = false;
-
-      (this as any).isResolved = true;
-      (this as any).isResolvedSuccessfully = true;
+      this.state = ResolverState.SETTLED;
 
       if (this.isFunctionObservableTarget) {
         this._data = e.data;
@@ -219,12 +247,7 @@ export class Resolver<T, D = any> {
     });
 
     delegate.pipe(filter(e => e.type === 'failure'), takeUntil(race(this._isAlive$, this._isPromoted$))).subscribe(e => {
-      this._state.loading = false;
-      this._state.errored = true;
-
-      (this as any).isResolved = true;
-      (this as any).isResolvedSuccessfully = false;
-
+      this.state = ResolverState.ERRORED;
       if (this.isFunctionObservableTarget) {
         this._error = e.data;
         this._error$.next(e.data);
@@ -272,19 +295,15 @@ export class Resolver<T, D = any> {
       }
     }
 
-    // Needed - Handles the state when we have a delegate
-    if (!this._isPromotedResolve) {
-      (this as any).isResolved = this._isDelegated ? resolverIdRecordEntry.delegateInstance.isResolved : false;
-      (this as any).isResolvedSuccessfully = this._isDelegated ? resolverIdRecordEntry.delegateInstance.isResolvedSuccessfully : false;
-    }
-
     if (this._isDelegated) {
-      const delegateInstance = resolverIdRecordEntry.delegateInstance;
-      if (delegateInstance.isResolvedSuccessfully) {
-        resolverIdRecordEntry.delegateChannel.next({ type: 'success', data: delegateInstance._data });
-      } else if (resolverIdRecordEntry.delegateInstance.isErrored) {
-        resolverIdRecordEntry.delegateChannel.next({ type: 'failure', data: delegateInstance._error });
-      }
+      asyncScheduler.schedule(() => {
+        const delegateInstance = resolverIdRecordEntry.delegateInstance;
+        if (delegateInstance.state === ResolverState.SETTLED) {
+          resolverIdRecordEntry.delegateChannel.next({ type: 'success', data: delegateInstance._data });
+        } else if (delegateInstance.state === ResolverState.ERRORED) {
+          resolverIdRecordEntry.delegateChannel.next({ type: 'failure', data: delegateInstance._error });
+        }
+      });
       return;
     }
 
@@ -301,41 +320,36 @@ export class Resolver<T, D = any> {
 
     asapScheduler.schedule(() => {
 
-      if (!this._isPromotedResolve) {
-        this._state.errored = false;
-        this._state.loading = true;
-        this._error = undefined;
-      }
+      // THIS SHOULD NOT NECESSARY BECAUSE DELEGATED RESOLVERS CHANGE STATES JUST LIKE THE DELEGATE
+      // if (!this._isPromotedResolve) {
+      //   this._state.errored = false;
+      //   this._state.loading = true;
+      //   this._error = undefined;
+      // }
 
       const deps = this.getDeps();
 
       this._dependencySubscription = deps.subscribe(data => {
-        if (this._isPromotedResolve) {
-          this._isPromotedResolve = false;
-          return;
-        }
-        // Needed - Handles the state when config is AutoResolve
-        (this as any).isResolved = false;
-        (this as any).isResolvedSuccessfully = false;
+        if (this._isPromotedResolve) { this._isPromotedResolve = false; return; }
+
+        this.state = ResolverState.RESOLVING;
+
         if (resolverIdRecordEntry) {
           resolverIdRecordEntry.requested = false;
         }
 
         const resolverDelegate = resolverIdRecordEntry && resolverIdRecordEntry.delegateChannel;
-        if (resolverDelegate) { resolverDelegate.next({ type: 'deps', data }); }
+        if (resolverDelegate) {
+          resolverDelegate.next({ type: 'deps', data });
+          resolverDelegate.next({ type: 'loading', data: null });
+        }
 
         if (!this.isFunctionObservableTarget) {
           const target = this.targetFn as IActionsTarget<T>;
-          if (resolverDelegate) {
-            resolverDelegate.next({ type: 'loading', data: null });
-          }
           target.loadAction(data);
           target.success$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
-            this._state.loading = false;
-            this._state.errored = false;
 
-            (this as any).isResolved = true;
-            (this as any).isResolvedSuccessfully = true;
+            this.state = ResolverState.SETTLED;
 
             if (resolverDelegate) {
               resolverDelegate.next({ type: 'success', data: null });
@@ -347,11 +361,7 @@ export class Resolver<T, D = any> {
             }
           });
           target.failure$.pipe(first(), takeUntil(this._isAlive$)).subscribe(() => {
-            this._state.loading = false;
-            this._state.errored = true;
-
-            (this as any).isResolved = true;
-            (this as any).isResolvedSuccessfully = false;
+            this.state = ResolverState.ERRORED;
 
             if (resolverDelegate) {
               resolverDelegate.next({ type: 'failure', data: null });
@@ -368,23 +378,19 @@ export class Resolver<T, D = any> {
             this._functionObservableSubscription.unsubscribe();
             this._functionObservableSubscription = undefined;
           }
-          if (resolverDelegate) {
-            resolverDelegate.next({ type: 'loading', data: null });
-          }
+
+          // tslint:disable-next-line:max-line-length
           this._functionObservableSubscription = targetFn(data).pipe(takeUntil(this._isAlive$)).subscribe({
             next: res => {
               this._data = res;
               this._data$.next(res);
 
-              (this as any).isResolved = true;
-              (this as any).isResolvedSuccessfully = true;
+              this.state = ResolverState.SETTLED;
 
               if (resolverDelegate) {
                 resolverDelegate.next({ type: 'success', data: res });
                 resolverIdRecordEntry.resolved = true;
               }
-              this._state.loading = false;
-              this._state.errored = false;
 
               if (resolverIdRecordEntry) {
                 resolverIdRecordEntry.requested = false;
@@ -394,15 +400,12 @@ export class Resolver<T, D = any> {
               this._error = err;
               this._error$.next(err);
 
-              (this as any).isResolved = true;
-              (this as any).isResolvedSuccessfully = false;
+              this.state = ResolverState.ERRORED;
 
               if (resolverDelegate) {
                 resolverDelegate.next({ type: 'failure', data: err });
                 resolverIdRecordEntry.resolved = true;
               }
-              this._state.loading = false;
-              this._state.errored = true;
 
               if (resolverIdRecordEntry) {
                 resolverIdRecordEntry.requested = false;
@@ -410,6 +413,14 @@ export class Resolver<T, D = any> {
             },
             complete: () => {
               this._functionObservableSubscription = undefined;
+
+              if (resolverDelegate) {
+                resolverIdRecordEntry.resolved = true;
+              }
+
+              if (resolverIdRecordEntry) {
+                resolverIdRecordEntry.requested = false;
+              }
             }
           });
         }
@@ -422,6 +433,14 @@ export class Resolver<T, D = any> {
     if (!resolveContainerRecord) { return; }
     const prototype = Object.getPrototypeOf(this);
     const record = resolveContainerRecord.get(prototype);
+    if (this._isBeingDestroyed) {
+      if (record && record.subscriberInstances.length > 0) {
+        asyncScheduler.schedule(() => { this.promoteNextResolver(); });
+      } else if (record && record.delegateInstance) {
+        resolveContainerRecord.delete(prototype);
+      }
+      return;
+    }
     if (!record || record.subscriberInstances.length === 0) { return; }
     const resolver = record.subscriberInstances[0];
     if (!resolver) { return; }
@@ -455,10 +474,11 @@ export class Resolver<T, D = any> {
   }
 
   destroy() {
+    this.stateChanges$.complete();
     let waitUntilResolved = false;
     let isDelegate = false;
     this._isBeingDestroyed = true;
-
+    let resolveStreamDestroy$ = null;
     if (!this.disconnectDifferentInstances) {
       const resolveContainerRecord = state.get(this.__parentResolveContainer__);
       const prototype = Object.getPrototypeOf(this);
@@ -466,7 +486,10 @@ export class Resolver<T, D = any> {
         const record = resolveContainerRecord.get(prototype);
         if (record.delegateInstance === this) {
           isDelegate = true;
-          if (this.isLoading) { waitUntilResolved = true; }
+          if (this.state === ResolverState.RESOLVING) {
+            waitUntilResolved = true;
+            resolveStreamDestroy$ = record.noSubscriptions$;
+          }
           if (record.subscriberInstances.length === 0) {
             Promise.resolve().then(() => { resolveContainerRecord.delete(prototype); });
           }
@@ -477,12 +500,12 @@ export class Resolver<T, D = any> {
     }
 
     if (waitUntilResolved) {
-      this.data$.pipe(observeOn(asyncScheduler), first()).subscribe({
-        next: () => {
+      this.data$.pipe(observeOn(asyncScheduler), first(), takeUntil(resolveStreamDestroy$)).subscribe({
+        error: () => {
           if (isDelegate) { this.promoteNextResolver(); }
           this.killStreams();
         },
-        error: () => {
+        complete: () => {
           if (isDelegate) { this.promoteNextResolver(); }
           this.killStreams();
         }
@@ -492,11 +515,13 @@ export class Resolver<T, D = any> {
       this.killStreams();
     }
 
-    if (!this._state.loading) { return; }
-    const target = this.targetFn as IActionsTarget<T>;
-    if (target.cancelAction) {
-      target.cancelAction();
+    if (this.state === ResolverState.RESOLVING) {
+      const target = this.targetFn as IActionsTarget<T>;
+      if (target.cancelAction) {
+        target.cancelAction();
+      }
     }
+    this.state = ResolverState.COMPLETED;
   }
 
   // tslint:disable-next-line:use-lifecycle-interface
