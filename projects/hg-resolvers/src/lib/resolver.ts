@@ -112,6 +112,7 @@ export class Resolver<T, D = any> {
   get isErrored() { return this.state === ResolverState.ERRORED; }
 
   get error(): Error {
+    if (this._isBeingDestroyed) { return; }
     if (this.isFunctionObservableTarget) { return this._error; }
     // tslint:disable-next-line:max-line-length
     console.warn('hg-resolvers: Action based async render resolvers don\'t have error property! Data management should be outsourced!');
@@ -119,6 +120,7 @@ export class Resolver<T, D = any> {
   }
 
   get data(): T {
+    if (this._isBeingDestroyed) { return; }
     if (this.isFunctionObservableTarget) { return this._data; }
     // tslint:disable-next-line:max-line-length
     console.warn('hg-resolvers: Action based async render resolvers don\'t have data property! Data management should be outsourced!');
@@ -126,6 +128,7 @@ export class Resolver<T, D = any> {
   }
 
   public get data$() {
+    if (this._isBeingDestroyed) { return; }
     if (this.isFunctionObservableTarget) { return this._dataObservable$; }
     // tslint:disable-next-line:max-line-length
     console.warn('hg-resolvers: Action based async render resolvers don\'t have data$ property! Data management should be outsourced!');
@@ -133,6 +136,7 @@ export class Resolver<T, D = any> {
   }
 
   public get error$() {
+    if (this._isBeingDestroyed) { return; }
     if (this.isFunctionObservableTarget) { return this._errorObservable$; }
     // tslint:disable-next-line:max-line-length
     console.warn('hg-resolvers: Action based async render resolvers don\'t have error$ property! Data management should be outsourced!');
