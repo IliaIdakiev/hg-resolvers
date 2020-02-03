@@ -490,7 +490,7 @@ export class Resolver<T, D = any> {
       }
     }
 
-    if (waitUntilResolved) {
+    if (this.data$ && waitUntilResolved) {
       this.data$.pipe(observeOn(asyncScheduler), first(), takeUntil(resolveStreamDestroy$)).subscribe({
         error: () => {
           if (isDelegate) { this.promoteNextResolver(); }
