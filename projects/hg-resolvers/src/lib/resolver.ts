@@ -1,4 +1,4 @@
-import { first, takeUntil, filter, withLatestFrom, observeOn, tap } from 'rxjs/operators';
+import { first, takeUntil, filter, withLatestFrom, observeOn } from 'rxjs/operators';
 import { asapScheduler, Observable, combineLatest, of, Subscription, ReplaySubject, Subject, asyncScheduler, race } from 'rxjs';
 import { diff, NOTHING } from './utils/differ';
 import { ResolveComponent } from './resolve/resolve.component';
@@ -196,8 +196,6 @@ export class Resolver<T, D = any> {
         target.cancelAction();
       }
       if (this.previousState !== null) { this.state = this.previousState; }
-      // this._state.errored = false;
-      // this._state.loading = false;
     }
 
     this._shouldSkip = value;
@@ -319,13 +317,6 @@ export class Resolver<T, D = any> {
     if (isAutoResolveOnceConfig) { this._autoResolveOnceCompleted = true; }
 
     asapScheduler.schedule(() => {
-
-      // THIS SHOULD NOT NECESSARY BECAUSE DELEGATED RESOLVERS CHANGE STATES JUST LIKE THE DELEGATE
-      // if (!this._isPromotedResolve) {
-      //   this._state.errored = false;
-      //   this._state.loading = true;
-      //   this._error = undefined;
-      // }
 
       const deps = this.getDeps();
 
