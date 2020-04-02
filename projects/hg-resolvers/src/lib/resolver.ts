@@ -271,9 +271,11 @@ export class Resolver<T, D = any> {
     let dependencies: any = this.dependencies;
     if (typeof this.dependencies === 'function') {
       dependencies = this.dependencies();
-      if (Array.isArray(dependencies)) { dependencies = [dependencies]; }
     }
-    return !dependencies ? of(undefined) : combineLatest(dependencies).pipe(
+
+    if (dependencies && !Array.isArray(dependencies)) { dependencies = [dependencies]; }
+
+    return !dependencies ? of(undefined) : combineLatest(...dependencies).pipe(
       (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this._isAlive$)
     );
   }

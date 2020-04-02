@@ -18,7 +18,7 @@ export function toObservable(target, key) {
   };
 
   Object.defineProperty(target, key, {
-    set: (value) => { subject.next(value); currentValue = value; },
+    set: (value) => { Promise.resolve().then(() => subject.next(value)); currentValue = value; },
     get: () => observable
   });
 }
