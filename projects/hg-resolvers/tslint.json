@@ -12,6 +12,7 @@
       "element",
       "hg",
       "kebab-case"
-    ]
+    ],
+    "space-before-function-paren": false
   }
 }
