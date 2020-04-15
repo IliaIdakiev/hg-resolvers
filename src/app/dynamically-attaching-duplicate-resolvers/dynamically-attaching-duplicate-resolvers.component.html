@@ -27,7 +27,7 @@
         Resolve</button>
 
       <br />
-      <div style="font-style: italic;">Note: UserService loadUsers and PostServie loadPosts have a delay operator
+      <div style="font-style: italic;">Note: UserService loadUsers and PostService loadPosts have a delay operator
         applied!
         Also if you go to the user
         service you can uncomment to throwError line in order to view how the error will be displayed</div>
@@ -41,7 +41,7 @@
       <div id="loader-overlay"></div>
     </ng-template>
     <ng-template #error let-isErrored let-errors="errors">
-      <div>{{errors}}</div>
+      <div>{{errors | json}}</div>
     </ng-template>
 
     <hg-resolve #resolve="hgResolve" [resolveOnInit]="true" appUserListResolver #userListResolver="appUserListResolver"

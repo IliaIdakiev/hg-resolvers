@@ -32,7 +32,7 @@
       </mat-progress-spinner>
     </ng-template>
     <ng-template #error let-isErrored let-errors="errors">
-      <div>{{errors}}</div>
+      <div>{{errors | json}}</div>
     </ng-template>
 
     <hg-resolve id="container" #resolve="hgResolve" appUserListResolver [resolveOnInit]="true" appPostListResolver

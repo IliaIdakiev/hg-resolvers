@@ -29,7 +29,7 @@
       <div id="loader-overlay"></div>
     </ng-template>
     <ng-template #error let-isErrored let-errors="errors">
-      <div>{{errors}}</div>
+      <div>{{errors | json}}</div>
     </ng-template>
 
     <hg-resolve #resolve="hgResolve" [resolveOnInit]="true" appUserListResolver #userListResolver="appUserListResolver"

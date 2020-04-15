@@ -121,7 +121,7 @@ export class ResolveBase {
     });
   }
 
-  get _errors() {
+  get errors() {
     return this.resolvers.map(r => {
       return (r as any)._error;
     });

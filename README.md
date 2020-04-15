@@ -128,7 +128,7 @@ export class AppModule { }
   <div *ngIf="showLoading">Loading...</div>
 </ng-template>
 <ng-template #error let-isErrored let-errors="errors">
-  <div *ngIf="isErrored">{{errors}}</div>
+  <div *ngIf="isErrored">{{errors | json}}</div>
 </ng-template>
 
 <hg-resolve appUserListResolver #userListResolver="appUserListResolver"
@@ -145,7 +145,7 @@ This code will trigger a resolve on init so if we dont' want that we will have t
   <div *ngIf="showLoading">Loading...</div>
 </ng-template>
 <ng-template #error let-isErrored let-errors="errors">
-  <div *ngIf="isErrored">{{errors}}</div>
+  <div *ngIf="isErrored">{{errors | json}}</div>
 </ng-template>
 <!-- resolveOnInit has a default value of true so you don't need to have if in this case -->
 <hg-resolve [resolveOnInit]="true" appUserListResolver #userListResolver="appUserListResolver"
@@ -164,7 +164,7 @@ Sometimes we want to be able to resolve multiple things. So lets suppose that we
   <div *ngIf="showLoading">Loading...</div>
 </ng-template>
 <ng-template #error let-isErrored let-errors="errors">
-  <div *ngIf="isErrored">{{errors}}</div>
+  <div *ngIf="isErrored">{{errors | json}}</div>
 </ng-template>
 
 <hg-resolve appUserListResolver appPostListResolver #userListResolver="appUserListResolver"
@@ -237,7 +237,7 @@ import { Observable } from 'rxjs';
   <div *ngIf="showLoading">Loading...</div>
 </ng-template>
 <ng-template #error let-isErrored let-errors="errors">
-  <div *ngIf="isErrored">{{errors}}</div>
+  <div *ngIf="isErrored">{{errors | json}}</div>
 </ng-template>
 
 <button (click)="resolve.refresh$.next()">Re-Fetch All</button>
@@ -267,7 +267,7 @@ Sometimes we want to attach a resolver to a container remotely/dynamically. We c
   <div *ngIf="showLoading">Loading...</div>
 </ng-template>
 <ng-template #error let-isErrored let-errors="errors">
-  <div *ngIf="isErrored">{{errors}}</div>
+  <div *ngIf="isErrored">{{errors | json}}</div>
 </ng-template>
 
 <button (click)="resolve.refresh$.next()">Re-Fetch All</button>
