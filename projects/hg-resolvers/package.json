@@ -1,6 +1,6 @@
 {
   "name": "hg-resolvers",
-  "version": "11.0.1",
+  "version": "11.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/IliaIdakiev/hg-resolvers"
@@ -10,11 +10,25 @@
     "@angular/common": "^7.0.0",
     "@angular/core": "^7.0.0"
   },
+  "author": {
+    "name": "Iliya Idakiev",
+    "url": "https://developers.google.com/community/experts/directory/profile/profile-iliya_idakiev"
+  },
+  "homepage": "https://github.com/IliaIdakiev/query-param-store",
   "keywords": [
     "angular",
+    "angular 2",
+    "angular 3",
+    "angular 4",
+    "angular 5",
+    "angular 6",
+    "angular 7",
+    "angular 8",
+    "angular 9",
     "resolver",
-    "resolving-data",
+    "resolvers",
+    "resolving data",
     "suspense",
-    "angular-suspense"
+    "angular suspense"
   ]
 }
