@@ -6,6 +6,7 @@ import { ResolveDirective } from './resolve.directive';
 import { ResolveBase } from './resolve-base';
 import { IResolverRecord } from './interfaces';
 import { ResolverState } from './enums';
+import { SimpleChanges } from '@angular/core';
 
 export enum ResolverConfig {
   Default = 'Default',
@@ -276,7 +277,8 @@ export class Resolver<T, D = any> {
     if (dependencies && !Array.isArray(dependencies)) { dependencies = [dependencies]; }
 
     return !dependencies ? of(undefined) : combineLatest(...dependencies).pipe(
-      (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this._isAlive$)
+      (isAutoResolveOnceConfig || isDefaultConfig) ? first() : takeUntil(this._isAlive$),
+      filter(() => !this.shouldSkip)
     );
   }
 
@@ -538,7 +540,16 @@ export class Resolver<T, D = any> {
   }
 
   // tslint:disable-next-line:use-lifecycle-interface
-  ngOnChanges() { this._process(); }
+  ngOnChanges(simpleChanges: SimpleChanges) {
+    if (
+      simpleChanges.shouldSkip &&
+      simpleChanges.shouldSkip.currentValue === false &&
+      simpleChanges.shouldSkip.previousValue === true &&
+      !this._dependencySubscription
+    ) {
+      this._process();
+    }
+  }
 
   _process() {
     if (this._processing) { return; }
