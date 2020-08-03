@@ -200,7 +200,9 @@ export class Resolver<T, D = any> {
         // if we have isFunctionObservableTarget === false as we are in the state of resolving
         target.cancelAction();
       }
-      if (this.previousState !== null) { this.state = this.previousState; }
+      if (this.previousState !== null && ![ResolverState.SETTLED, ResolverState.ERRORED].includes(this.state)) {
+        this.state = this.previousState;
+      }
     }
 
     this._shouldSkip = value;

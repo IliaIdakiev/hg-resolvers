@@ -12,6 +12,7 @@ export class ContainerWithMultipleResolversWithDependenciesComponent implements 
   displayedColumns = ['username', 'email', 'name'];
   postsDisplayedColumns = ['userId', 'title'];
 
+  disabledResolving = false;
   constructor() { }
 
   ngOnInit() {

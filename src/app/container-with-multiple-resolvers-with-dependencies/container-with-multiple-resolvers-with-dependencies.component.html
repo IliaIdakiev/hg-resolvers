@@ -5,12 +5,13 @@
   <mat-card-content>
     <p>In this scenario we have a user list resolver and a user post resolver. The user posts resolver is skipped until
       we
-      select a valid userId value. Whenever the userId value is set the user posts resolver will auto resolve (auto load
+      select a valid userId value and while the should skip flag is set to false. Whenever the userId value is set and
+      the skip flag is set to false the user posts resolver will auto resolve (auto load
       the
       data) but that won't
       trigger a user list resolve (For more info look into the user-posts resolver file). We also added the
       [hideContentUntilResolvedSuccessfully]="false" since we want to show the content of the resolve container all the
-      time and actially display the loader/spinner over the content. If you are interested in a more complex loader
+      time and actually display the loader/spinner over the content. If you are interested in a more complex loader
       example check out section 6.
     </p>
     <br />
@@ -19,6 +20,8 @@
     <div>
       <button id="reload-btn" button mat-raised-button color="primary" (click)="resolve.resolve()">Trigger
         Resolve</button>
+      <button id="reload-btn" button mat-raised-button color="primary" (click)="disabledResolving = !disabledResolving">
+        Toggle skip flag: {{(disabledResolving)? 'disabled' : 'enabled'}} resolving </button>
       <br />
       <br />
       <div style="font-style: italic;">Note: UserService loadUsers and PostServie loadPosts have a delay operator
@@ -38,11 +41,11 @@
       <div>{{errors | json}}</div>
     </ng-template>
 
-    <hg-resolve #resolve="hgResolve" [resolveOnInit]="true" appUserListResolver [appUserPostsResolver]="!selectedUserId"
-      [selectedUserId]="selectedUserId" #userListResolver="appUserListResolver"
-      #userPostsResolver="appUserPostsResolver" [loaderTemplateRef]="loader" [autoControlLoader]="true"
-      [hideContentUntilResolvedSuccessfully]="false" [errorTemplateRef]="error" [autoControlError]="true"
-      [resolveOnInit]="true">
+    <hg-resolve #resolve="hgResolve" [resolveOnInit]="true" appUserListResolver
+      [appUserPostsResolver]="!selectedUserId || disabledResolving" [selectedUserId]="selectedUserId"
+      #userListResolver="appUserListResolver" #userPostsResolver="appUserPostsResolver" [loaderTemplateRef]="loader"
+      [autoControlLoader]="true" [hideContentUntilResolvedSuccessfully]="false" [errorTemplateRef]="error"
+      [autoControlError]="true" [resolveOnInit]="true">
       <mat-grid-list cols="4" rowHeight="600px">
         <mat-grid-tile [colspan]="2" [rowspan]="1">
           <div *ngIf="userListResolver.data$ | async" class="resolve-content">

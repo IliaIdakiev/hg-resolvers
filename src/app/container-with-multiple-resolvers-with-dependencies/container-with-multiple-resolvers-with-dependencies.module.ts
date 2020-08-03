@@ -5,7 +5,7 @@ import { UserListResolverDirective } from './-resolvers/user-list.resolver';
 import { SingleResolverRoutingModule } from './container-with-multiple-resolvers-with-dependencies-routing.module';
 import { HGResolversModule } from 'hg-resolvers';
 import { PostListResolverDirective } from './-resolvers/post-list.resolver';
-import { UserPostsResolverDirective } from '../-resolvers/user-posts.resolver';
+import { UserPostsResolverDirective } from './-resolvers/user-posts.resolver';
 import {
   MatTableModule,
   MatButtonModule,
