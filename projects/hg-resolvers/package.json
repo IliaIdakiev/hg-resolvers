@@ -1,6 +1,6 @@
 {
   "name": "hg-resolvers",
-  "version": "11.0.4",
+  "version": "11.0.6",
   "repository": {
     "type": "git",
     "url": "https://github.com/IliaIdakiev/hg-resolvers"
